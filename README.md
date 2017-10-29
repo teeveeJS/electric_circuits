@@ -1,6 +1,6 @@
 # Interactive Simulation of Electric Circuits
-A responsive program where the user will direcly interface with an electric circuit, controlling its connections, components, and their values. The available components include, but are not necessarily limited to, voltage sources, switches, resistors, capacitors, and inductors. The user will be able to construct unique circuits from the above-mentioned components or explore various basic circuits, such as RC and LC circuits.
-\_
+A responsive program where the user will directly interface with an electric circuit, controlling its connections, components, and their values. The available components include, but are not necessarily limited to, voltage sources, switches, resistors, capacitors, and inductors. The user will be able to construct unique circuits from the above-mentioned components or explore various basic circuits, such as RC and LC circuits.
+
 In terms of code, the program will use:
 * Kirchhoff's Loop Rules
 	* Matrices and linear algebra to solve systems of equations
@@ -12,3 +12,20 @@ In terms of code, the program will use:
 	* A graph of Current vs. Time in a RC circuit, for instance
 * And undoubtedly more!
 
+##Important equations
+
+Ohm's Law:
+$$ I = \frac{V}{R} $$
+
+Definition of Current:
+$$ I = \frac{\mathrm{d} Q}{\mathrm{d} t} $$
+
+### Kirchhoff's Loop Rules
+Kirchhoff's Voltage Law:
+$$ \sum_{k=1}^n V_k = 0 $$
+
+Kirchhoff's Current Law:
+$$ \sum_{k=1}^n I_k = 0 $$
+
+### Capacitors
+$$ C = \frac{Q}{v} $$
