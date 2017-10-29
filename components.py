@@ -80,28 +80,25 @@ class Component:
 
 
 class Wire(Component):
-    def __init__(self, R=0):
-        super().__init__(0, 0, R)
+    def __init__(self, R=0, name):
+        super().__init__(0, 0, R, name)
 
 class Junction(Component):
-    """These are merely for splitting wires and don't have any physical
-    properties"""
-    def __init__(self, cxns):
-        super().__init(0, 0, 0, cxns)
+    """For splitting wires"""
+    def __init__(self, name, cxns):
+        super().__init(0, 0, 0, name, cxns)
 
 class State(Enum):
-    OPEN = true
-    CLOSED = false
     ON = true
-    OFF = false #this is probably stylistically super bad
+    OFF = false
 
 class Switch(Component):
-    def __init__(self, state=State.CLOSED): #probably not the best use of enums
-        super().__init__(self, 0, 0, 0)
+    def __init__(self, name, state=State.ON): #probably not the best use of enums
+        super().__init__(self, 0, 0, 0, name)
         self.__state = state
 
     def state():
-        doc = "The state of the switch (OPEN or CLOSED)"
+        doc = "The state of the switch (ON or OFF)"
         def fget(self):
             return self.__state
         def fset(self, value):
@@ -117,8 +114,8 @@ class Type(Enum):
     OHMMETER = 2
 
 class Multimeter(Component):
-    def __init__(self, meter_type=Type.VOLTMETER):
-        super().__init__(0, 0, 0)
+    def __init__(self, name, meter_type=Type.VOLTMETER):
+        super().__init__(0, 0, 0, name)
         self.__meter_type = meter_type
         self.__reading
 
@@ -134,7 +131,7 @@ class Multimeter(Component):
     meter_type = property(**meter_type())
 
     def reading():
-        doc = "The _reading property."
+        doc = "The reading to be displayed in the GUI."
         def fget(self):
             return self.__reading
         def fset(self, value):
@@ -144,19 +141,22 @@ class Multimeter(Component):
         return locals()
     reading = property(**reading())
 
+    def calc_reading(self, circuit):
+
+
 class DC_Battery(Component):
     """Direct Current emf source"""
-    def __init__(self, V=3, R=0):
+    def __init__(self, V=3, R=0, name):
         #R represents the battery's internal resistance
-        super().__init__(V, 0, R)
+        super().__init__(V, 0, R, name)
 
 class Resistor(Component):
-    def __init__(self, R=5):
-        super().__init__(0, 0, R)
+    def __init__(self, R=5, name):
+        super().__init__(0, 0, R, name)
 
 class Light_Bulb(Resistor):
-    def __init__(self, R, W, state=State.OFF):
-        super().__init(0, 0, R)
+    def __init__(self, R, W, mame, state=State.OFF):
+        super().__init(0, 0, R, name)
         self.__state = state
         self.__wattage = W
 
@@ -193,8 +193,8 @@ class Capacitor(Component):
     kappa: the dielectric constant (1 in vacuum)
     epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
-    def __init__(self, V, A, d=0.01, kappa=1):
-        super().__init__(V, 0, 0)
+    def __init__(self, V, A, d=0.01, kappa=1, name):
+        super().__init__(V, 0, 0, name)
         self.epsilon = kappa * 8.854e-12
         self.__C = self.epsilon * A / d
         self.__Q = self.cpty * self.emf

@@ -48,3 +48,9 @@ class Circuit:
             * at least one source of emf
                 * doesn't have be a battery: could be a capacitor or an inductor
         """
+
+    def get_component(self, name):
+        return self.vertices[name]
+
+    def add_component(self, component):
+        np.insert(self.vertices, len(self.vertices), component)
