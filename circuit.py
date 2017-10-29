@@ -1,14 +1,14 @@
 import numpy as np
 
 class Circuit:
-    """Essentially a Graph consisting of Vertices and Edges"""
+    """Graph consisting of Vertices and Edges G(V, E)"""
     def __init__(self, V, E):
         self.__vertices = V
         self.__edges = E
         self.validate()
 
     def vertices():
-        doc = "Vertices of the Circuit"
+        doc = "Vertices (components) of the Circuit"
         def fget(self):
             return self.__vertices
         def fset(self, value):
@@ -19,7 +19,7 @@ class Circuit:
     vertices = property(**vertices())
 
     def edges():
-        doc = "The _edges property."
+        doc = "Edges (connections) of the circuit."
         def fget(self):
             return self.__edges
         def fset(self, value):
@@ -34,9 +34,17 @@ class Circuit:
         A = np.zeros((len(self.vertices), len(self.vertices)))
 
         for e in self.edges:
-            A[self.edges[e, 0], self.edges[e, 1]] = 1
+            A[e[0], e[1]] = 1
+            A[e[1], e[0]] = 1 # the connection goes both ways
 
         return A
 
     def validate(self):
-        """Check that a valid circuit has been made"""
+        """
+        Check that a valid circuit has been made.
+        Criteria for a valid circuit:
+        * at least one closed loop with:
+            * non-zero resistance
+            * at least one source of emf
+                * doesn't have be a battery: could be a capacitor or an inductor
+        """
