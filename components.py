@@ -5,11 +5,25 @@ from enum import Enum
 """
 TODO:
 * connections
+* capacitor initial charge
 * inductors
+    * magnetic flux
 * AC voltage suppliers (?)
     * capacitive reactance and impedance
 
 """
+
+# probably won't actually need this
+class Comp_Type(Enum):
+    WIRE: 0,
+    JUNCTION: 1,
+    SWITCH: 2,
+    MULTIMETER: 3,
+    DC_BATTER: 4,
+    RESISTOR: 5,
+    LIGHT_BULB: 6,
+    CAPACITOR: 7,
+    INDUCTOR: 8
 
 class Component:
     """
@@ -17,7 +31,7 @@ class Component:
     curr: the current through the component
     res: resistance of the component
     name: vertex number of the component
-    num_cxns: the number of connections the component has
+    cxns: an array of connections
     """
     def __init__(self, V_o, I_o, R_o, name, num_cxns=2):
         self.__emf = V_o
@@ -64,11 +78,11 @@ class Component:
         return self.curr * self.emf
 
     @property
-    def get_name(self):
+    def name(self):
         return self.__name
 
     def cxns():
-        doc = "An array of connections."
+        doc = "An array of endpoints (names) connected to the component."
         def fget(self):
             return self.__cxns
         def fset(self, value):
@@ -78,19 +92,24 @@ class Component:
         return locals()
     cxns = property(**cxns())
 
+    def formatted_cxns(self):
+        """Formats the connections for circuit edges"""
+        return np.stack((self.cxns, np.ones(len(self.cxns))*self.name, axis=-1)
+
 
 class Wire(Component):
-    def __init__(self, R=0, name):
+    def __init__(self, name, R=0):
+        # V is always 0
         super().__init__(0, 0, R, name)
 
 class Junction(Component):
-    """For splitting wires"""
-    def __init__(self, name, cxns):
-        super().__init(0, 0, 0, name, cxns)
+    """For splitting wires."""
+    def __init__(self, name, cxns=3):
+        super().__init__(0, 0, 0, name, cxns)
 
 class State(Enum):
-    ON = true
-    OFF = false
+    ON = True
+    OFF = False
 
 class Switch(Component):
     def __init__(self, name, state=State.ON): #probably not the best use of enums
@@ -106,7 +125,7 @@ class Switch(Component):
         def fdel(self):
             del self.__state
         return locals()
-    state = property(**_state())
+    state = property(**state())
 
 class Type(Enum):
     AMMETER = 0
@@ -142,16 +161,26 @@ class Multimeter(Component):
     reading = property(**reading())
 
     def calc_reading(self, circuit):
+        """
+        Calculates the value to be displayed
+        * current: current flowing out of the previous components
+            * direction of current?
+        * voltage: total voltage drop of the components in between the two ends
+        * resistance: the equivalent resistance of the components in between
+        """
 
+
+
+        return
 
 class DC_Battery(Component):
     """Direct Current emf source"""
-    def __init__(self, V=3, R=0, name):
+    def __init__(self, name, V=3, R=0):
         #R represents the battery's internal resistance
         super().__init__(V, 0, R, name)
 
 class Resistor(Component):
-    def __init__(self, R=5, name):
+    def __init__(self, name, R=5):
         super().__init__(0, 0, R, name)
 
 class Light_Bulb(Resistor):
@@ -169,7 +198,7 @@ class Light_Bulb(Resistor):
         def fdel(self):
             del self.__state
         return locals()
-    state = property(**_state())
+    state = property(**state())
 
     def wattage():
         doc = "The wattage required for the bulb to light up"
@@ -193,7 +222,7 @@ class Capacitor(Component):
     kappa: the dielectric constant (1 in vacuum)
     epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
-    def __init__(self, V, A, d=0.01, kappa=1, name):
+    def __init__(self, name, V, A, d=0.01, kappa=1):
         super().__init__(V, 0, 0, name)
         self.epsilon = kappa * 8.854e-12
         self.__C = self.epsilon * A / d
