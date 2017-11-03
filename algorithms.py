@@ -2,19 +2,11 @@ import numpy as np
 
 def get_neighbors(Graph, vertex):
     neighbors = []
-    for edge in Graph.E:
+    for edge in Graph.edges:
         if edge[0] == vertex:
             neighbors.append(edge[1])
         elif edge[1] == vertex:
             neighbors.append(edge[0])
-    return neighbors
-
-# not used for this backtracker
-def get_neighbor_edges(Graph, vertex):
-    neighbors = []
-    for edge in Graph.E:
-        if vertex in edge:
-            neighbors.append(edge)
     return neighbors
 
 def is_repeating(hist):
@@ -33,7 +25,7 @@ def subsetof(a, b):
                 matches += 1
     return len(a) == matches
 
-def backtracker(Graph, current_node, visited_nodes, traversed_edges):
+def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges=np.array([[None, None]])):
 
     #print("current node:", current_node, visited_nodes)
 
@@ -47,7 +39,7 @@ def backtracker(Graph, current_node, visited_nodes, traversed_edges):
         # no loop found
         return None
 
-    vertices = np.fromfunction(lambda i, j: j, (1, len(Graph.V)))
+    vertices = np.fromfunction(lambda i, j: j, (1, len(Graph.vertices)))
     if subsetof(vertices, visited_nodes):
         # no loop found
         return None
@@ -59,8 +51,8 @@ def backtracker(Graph, current_node, visited_nodes, traversed_edges):
             return backtracker(Graph, n, visited_nodes, traversed_edges)
         elif (not subsetof([[current_node, n]], traversed_edges)) and \
             (not subsetof([[n, current_node]], traversed_edges)) and \
-            (subsetof([[n, current_node]], Graph.E) or \
-            subsetof([[current_node, n]], Graph.E)) and \
+            (subsetof([[n, current_node]], Graph.edges) or \
+            subsetof([[current_node, n]], Graph.edges)) and \
             np.array_equal(n, visited_nodes[0]):
                 """Found a loop!!!"""
                 return visited_nodes
@@ -69,12 +61,21 @@ def backtracker(Graph, current_node, visited_nodes, traversed_edges):
     # print("backtracking to:", visited_nodes[len_vis-2])
     return backtracker(Graph, visited_nodes[len_vis-2], visited_nodes, traversed_edges)
 
-def greedy(Graph, start_node):
+def greedy(Graph, start_node, visited_nodes):
     """
-    Greedy (Best-first search?) algorithm to check if Graph can be traversed
+    Greedy algorithm to check if Graph can be traversed
     with zero cost (resistance)
     """
 
-    least_val = np.inf
+    visited_nodes = np.append(visited_nodes, start_node)
 
-    return least_val
+    cost = np.inf
+    current_next = None
+
+    for n in get_neighbors(Graph, start_node):
+        if not n in visited_nodes and Graph.vertices[n].res < cost:
+            cost = Graph.vertices[n].res
+            current_next = n
+
+    if current_next != None:
+        return greedy(Graph, current_next, visited_nodes)
