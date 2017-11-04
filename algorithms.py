@@ -13,7 +13,7 @@ def get_neighbors(Graph, vertex):
 
 def get_neighbor_edges(Graph, vertex):
     neighbors = []
-    for edge in Graph.edges:
+    for edge in Graph.edge_tuples:
         if vertex in edge:
             neighbors.append(edge)
     return neighbors

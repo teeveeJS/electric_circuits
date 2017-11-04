@@ -1,4 +1,5 @@
 import numpy as np
+from components import *
 from algorithms import backtracker, greedy, get_neighbor_edges
 
 class Circuit:
@@ -72,15 +73,27 @@ class Circuit:
         for comp in self.vertices:
             # add isinstance(comp, Inductor)
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                if not backtracker(self, comp.name) is None and \
+                if (not backtracker(self, comp.name) is None) and \
                    greedy(self, comp.name):
                         return True # circuit is valid
 
         return False # circuit is not valid
 
     def run(self):
+        # this is where all the calculations will take place
+        self.add_ground()
+
+
+        return None
+
+    def add_component(self, component):
+        self.vertices = np.insert(self.vertices, len(self.vertices), component)
+        return None
+
+    def add_ground(self):
         # add a Ground to the circuit
-        self.add_component(Ground(len(self.vertices)))
+        ground = Ground(len(self.vertices))
+        self.add_component(ground)
         # the circuit needs to be broken open so that the Ground can be connected
         break_edge = None
         for comp in self.vertices:
@@ -90,7 +103,14 @@ class Circuit:
                 break
         # delete break_edge from self.edges
         # then form two new Wires to self.edges with Ground inserted in between
-        self.edges = np.delete(self.edges, )
+        for i in range(len(self.edges)):
+            if np.array_equal(self.edges[i], break_edge):
+                self.edges = np.delete(self.edges, i, 0)
+                break
 
-    def add_component(self, component):
-        np.insert(self.vertices, len(self.vertices), component)
+        print(self.edge_tuples)
+
+        self.edges = np.insert(self.edges, len(self.edges), Wire(break_edge[0], ground.name), 0)
+        self.edges = np.insert(self.edges, len(self.edges), Wire(break_edge[1], ground.name), 0)
+
+        return None
