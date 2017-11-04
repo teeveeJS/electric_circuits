@@ -1,15 +1,19 @@
 import numpy as np
-import pathfinding
+from algorithms import backtracker, greedy, get_neighbor_edges
 
 class Circuit:
-    """Graph consisting of Vertices and Edges G(V, E)"""
+    """
+    Graph consisting of Vertices and Edges G(V, E)
+    Vertices are Components and Edges are Wires
+    """
     def __init__(self, V, E):
         self.__vertices = V
         self.__edges = E
+
         self.validate()
 
     def vertices():
-        doc = "Vertices (components) of the Circuit: an array of components"
+        doc = "Vertices (components) of the Circuit: an array of Components"
         def fget(self):
             return self.__vertices
         def fset(self, value):
@@ -20,7 +24,7 @@ class Circuit:
     vertices = property(**vertices())
 
     def edges():
-        doc = "Edges (connections) of the circuit: an array of 2-tuples"
+        doc = "Edges (connections) of the Circuit: an array of Wires"
         def fget(self):
             return self.__edges
         def fset(self, value):
@@ -31,10 +35,15 @@ class Circuit:
     edges = property(**edges())
 
     @property
+    def edge_tuples(self):
+        """Reformats the edges for ease-of-use with some algorithms"""
+        return list(map(lambda e: e.pair, self.edges))
+
+    @property
     def adjcy_matrix(self):
         A = np.zeros((len(self.vertices), len(self.vertices)))
 
-        for e in self.edges:
+        for e in self.edge_tuples:
             A[e[0], e[1]] = 1
             A[e[1], e[0]] = 1 # the connection goes both ways
 
@@ -63,12 +72,25 @@ class Circuit:
         for comp in self.vertices:
             # add isinstance(comp, Inductor)
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                if pathfinding.shortest_closed_loop(self, comp) > 0:
-                    return True # valid
+                if not backtracker(self, comp.name) is None and \
+                   greedy(self, comp.name):
+                        return True # circuit is valid
 
-        return False # not valid
+        return False # circuit is not valid
 
-
+    def run(self):
+        # add a Ground to the circuit
+        self.add_component(Ground(len(self.vertices)))
+        # the circuit needs to be broken open so that the Ground can be connected
+        break_edge = None
+        for comp in self.vertices:
+            # simply place the Ground next to the first found emf source
+            if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
+                break_edge = get_neighbor_edges(self, comp.name)[0]
+                break
+        # delete break_edge from self.edges
+        # then form two new Wires to self.edges with Ground inserted in between
+        self.edges = np.delete(self.edges, )
 
     def add_component(self, component):
         np.insert(self.vertices, len(self.vertices), component)

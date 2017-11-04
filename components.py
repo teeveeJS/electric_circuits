@@ -2,36 +2,12 @@ import numpy as np
 from enum import Enum
 
 
-"""
-TODO:
-* connections
-* capacitor initial charge
-* inductors
-    * magnetic flux
-* AC voltage suppliers (?)
-    * capacitive reactance and impedance
-
-"""
-
-# probably won't actually need this
-class Comp_Type(Enum):
-    WIRE: 0,
-    JUNCTION: 1,
-    SWITCH: 2,
-    MULTIMETER: 3,
-    DC_BATTER: 4,
-    RESISTOR: 5,
-    LIGHT_BULB: 6,
-    CAPACITOR: 7,
-    INDUCTOR: 8
-
 class Component:
     """
     emf: voltage drop across the component
     curr: the current through the component
     res: resistance of the component
     name: vertex number of the component
-    cxns: an array of connections
     """
     def __init__(self, V_o, I_o, R_o, name, num_cxns=2):
         self.__emf = V_o
@@ -75,41 +51,83 @@ class Component:
 
     @property
     def power(self):
+        """Power dissipated by the element"""
         return self.curr * self.emf
 
     @property
     def name(self):
         return self.__name
 
-    def cxns():
-        doc = "An array of endpoints (names) connected to the component."
+
+class Wire:
+    def __init__(self, start, end):
+        self.__start = start
+        self.__end = end
+        self.__pair = (self.start, self.end)
+
+    def start():
+        doc = "The _start property."
         def fget(self):
-            return self.__cxns
+            return self.__start
         def fset(self, value):
-            self.__cxns = value
+            self.__start = value
         def fdel(self):
-            del self.__cxns
+            del self.__start
         return locals()
-    cxns = property(**cxns())
+    start = property(**start())
 
-    def formatted_cxns(self):
-        """Formats the connections for circuit edges"""
-        return np.stack((self.cxns, np.ones(len(self.cxns))*self.name, axis=-1)
+    def end():
+        doc = "The _end property."
+        def fget(self):
+            return self.__end
+        def fset(self, value):
+            self.__end = value
+        def fdel(self):
+            del self.__end
+        return locals()
+    end = property(**end())
+
+    def pair():
+        doc = "The _pair property."
+        def fget(self):
+            return self.__pair
+        def fset(self, value):
+            self.__pair = value
+        def fdel(self):
+            del self.__pair
+        return locals()
+    pair = property(**pair())
 
 
-class Wire(Component):
-    def __init__(self, name, R=0):
-        # V is always 0
-        super().__init__(0, 0, R, name)
+class Ground:
+    """
+    Grounds will only be used in circuit analysis; not available to the users
+    """
+    def __init__(self, name):
+        self.__name = name
+
+    def name():
+        doc = "The _name property."
+        def fget(self):
+            return self.__name
+        def fset(self, value):
+            self.__name = value
+        def fdel(self):
+            del self.__name
+        return locals()
+    name = property(**name())
+
 
 class Junction(Component):
     """For splitting wires."""
     def __init__(self, name, cxns=3):
         super().__init__(0, 0, 0, name, cxns)
 
+
 class State(Enum):
     ON = True
     OFF = False
+
 
 class Switch(Component):
     def __init__(self, name, state=State.ON): #probably not the best use of enums
@@ -127,13 +145,15 @@ class Switch(Component):
         return locals()
     state = property(**state())
 
-class Type(Enum):
+
+class Meter_Type(Enum):
     AMMETER = 0
     VOLTMETER = 1
     OHMMETER = 2
 
+
 class Multimeter(Component):
-    def __init__(self, name, meter_type=Type.VOLTMETER):
+    def __init__(self, name, meter_type=Meter_Type.VOLTMETER):
         super().__init__(0, 0, 0, name)
         self.__meter_type = meter_type
         self.__reading
@@ -173,15 +193,18 @@ class Multimeter(Component):
 
         return
 
+
 class DC_Battery(Component):
     """Direct Current emf source"""
     def __init__(self, name, V=3, R=0):
         #R represents the battery's internal resistance
         super().__init__(V, 0, R, name)
 
+
 class Resistor(Component):
     def __init__(self, name, R=5):
         super().__init__(0, 0, R, name)
+
 
 class Light_Bulb(Resistor):
     def __init__(self, R, W, mame, state=State.OFF):
@@ -210,6 +233,7 @@ class Light_Bulb(Resistor):
             del self.__wattage
         return locals()
     wattage = property(**wattage())
+
 
 class Capacitor(Component):
     """
