@@ -59,8 +59,9 @@ class Component:
         return self.__name
 
 
-class Wire:
+class Wire(Component):
     def __init__(self, start, end):
+        super().__init__(0, 0, 0, -1)
         self.__start = start
         self.__end = end
         self.__pair = (self.start, self.end)

@@ -73,15 +73,18 @@ class Circuit:
         for comp in self.vertices:
             # add isinstance(comp, Inductor)
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
+                print('a', backtracker(self, comp.name) is None)
+                print('b', greedy(self, comp.name))
                 if (not backtracker(self, comp.name) is None) and \
                    greedy(self, comp.name):
+                        print('valid')
                         return True # circuit is valid
 
         return False # circuit is not valid
 
     def run(self):
-        # this is where all the calculations will take place
-        self.add_ground()
+        # this is where all the nodal analysis will take place
+        # self.add_ground()
 
 
         return None
