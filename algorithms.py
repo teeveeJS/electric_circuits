@@ -1,5 +1,7 @@
 import numpy as np
 
+total_res = 0
+
 
 def get_neighbors(Graph, vertex):
     neighbors = []
@@ -38,9 +40,10 @@ def subsetof(a, b):
 
 def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges=np.array([[None, None]])):
     # mark current node visited
-    print(visited_nodes)
     visited_nodes = np.append(visited_nodes, current_node)
     len_vis = len(visited_nodes)
+
+    print(visited_nodes)
 
     # check if stuck in an infinite loop: no closed loop
     if is_repeating(visited_nodes):
@@ -69,7 +72,7 @@ def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges
             subsetof([[current_node, n]], Graph.edge_tuples)) and \
             np.array_equal(n, visited_nodes[0]):
                 print("Found a loop!!!")
-                return total_res, visited_nodes
+                return total_res#, visited_nodes
 
     if not current_next is None:
         total_res += current_res
@@ -79,3 +82,22 @@ def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges
     # has no unvisited nodes
     print('backtracking')
     return backtracker(Graph, visited_nodes[len_vis-2], visited_nodes, traversed_edges)
+
+
+# def equipotentials(Graph, eqprs=np.array([]), start_edge=None):
+#     """calculate all the equipotential regions in a circuit"""
+#
+#     if start_edge is None:
+#         start_edge = Graph.edge_tuples[0]
+#
+#     current_region = np.array([])
+#     current_edge = start_edge
+#
+#     while isinstance(Graph.vertices[current_edge[0]], Junction):
+#         if not current_edge in eqprs:
+#             current_region = np.append(current_region, current_edge)
+#         # update current_edge
+#
+#
+#
+#     return eqprs

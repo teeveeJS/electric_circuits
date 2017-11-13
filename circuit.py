@@ -1,6 +1,6 @@
 import numpy as np
 from components import *
-from algorithms import backtracker, greedy, get_neighbor_edges
+from algorithms import backtracker, get_neighbor_edges
 
 class Circuit:
     """
@@ -73,18 +73,30 @@ class Circuit:
         for comp in self.vertices:
             # add isinstance(comp, Inductor)
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                print('a', backtracker(self, comp.name) is None)
-                print('b', greedy(self, comp.name))
-                if (not backtracker(self, comp.name) is None) and \
-                   greedy(self, comp.name):
-                        print('valid')
-                        return True # circuit is valid
+                if backtracker(self, comp.name) > 0:
+                    print('valid')
+                    # reset total_res
+                    global total_res
+                    total_res = 0
+                    return True # circuit is valid
 
         return False # circuit is not valid
 
     def run(self):
         # this is where all the nodal analysis will take place
         # self.add_ground()
+
+        # TODO: calculate equipotential regions. until then, each Wire is a node
+
+        # add directions to the components' currents
+        
+
+        # set up the matrices
+        matr_size = len(self.edges) + len(self.vertices)
+        A = np.array((matr_size, matr_size))
+        b = np.array((1, matr_size))
+
+        # loop through all the nodes and components to fill the matrices
 
 
         return None

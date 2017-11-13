@@ -14,7 +14,10 @@ class Component:
         self.__I = I_o
         self.__R = R_o
         self.__name = name
-        self.__cxns = np.ones(num_cxns) * name
+        self.__cxns = np.ones(num_cxns) * self.name
+
+        # direction of current in the component
+        self.curr_dir = np.ones(2) * self.name # [start, end]
 
     def emf():
         doc = "The emf property."
@@ -48,6 +51,37 @@ class Component:
             del self.__R
         return locals()
     res = property(**res())
+
+    def cxns():
+        doc = "The _cxns property."
+        def fget(self):
+            return self.__cxns
+        def fset(self, value):
+            self.__cxns = value
+        def fdel(self):
+            del self.__cxns
+        return locals()
+    cxns = property(**cxns())
+
+    @property
+    def add_connection(self, cxn):
+        for c in self.cxns:
+            if c != self.name:
+                c = cxn
+                # what if the component has the same connection twice?
+                # i.e. a circuit consisting of only a battery and a resistor
+                break
+        return self.cxns
+
+    @property
+    def rm_connection(self, cxn):
+        # TODO: handle the erorr case where nothing is removed
+        for c in self.cxns:
+            if c == cxn:
+                c = self.name
+                # potential problem: only the first instance is removed
+                break
+        return self.cxns
 
     @property
     def power(self):
