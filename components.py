@@ -281,8 +281,8 @@ class Capacitor(Component):
     kappa: the dielectric constant (1 in vacuum)
     epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
-    def __init__(self, name, V, A, d=0.01, kappa=1):
-        super().__init__(V, 0, 0, name)
+    def __init__(self, name, A, d=0.01, kappa=1):
+        super().__init__(0, 0, 0, name)
         self.epsilon = kappa * 8.854e-12
         self.__C = self.epsilon * A / d
         self.__Q = self.cpty * self.emf

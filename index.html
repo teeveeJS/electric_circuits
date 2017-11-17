@@ -15,10 +15,10 @@
     <h3>Build Your Own Electric Circuit!</h3>
 
     <!-- This is where the user will place the components -->
-    <div id="sandbox"></div>
+    <div id="sandbox" class="big_frame"></div>
 
     <!-- Menu for the components -->
-    <div id="comp_menu">
+    <div id="comp_menu" class="big_frame">
       <div class="comp">Wire</div>
       <div class="comp">Junction</div>
       <div class="comp">DC Battery</div>
@@ -32,23 +32,46 @@
     <style>
 
     #sandbox {
-      background-color: #a2a8b2;
-      height: 600px;
-      width: 800px;
+
     }
 
     #comp_menu {
-      background-color: #a2a8b2;
-      height: 600px;
-      width: 300px;
+
     }
 
-
+    .big_frame {
+      position: absolute;
+      background-color: #a2a8b2;
+    }
 
     </style>
 
 
     <script>
+    /* tweak the frames' size and location */
+    let wh = window.innerHeight;
+    let ww = window.innerWidth;
+
+    let sb = document.getElementById("sandbox");
+    sb.style['margin-left'] = "10px";
+    sb.style['height'] = String(wh-100) + "px";
+    sb.style['width'] = String(ww*0.75) + "px";
+
+    let cm = document.getElementById("comp_menu");
+    cm.style['margin-left'] = String(ww*0.85) + "px";
+    cm.style['height'] = String(wh-100);
+    cm.style['width'] = String(ww*0.15);
+
+    let comps = document.getElementsByClassName("comp");
+    for (c of comps) {
+      c.addEventListener("click", add_component);
+    }
+
+    function add_component(event) {
+
+      
+    }
+
 
     </script>
   </body>
