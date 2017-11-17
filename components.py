@@ -66,7 +66,7 @@ class Component:
     @property
     def add_connection(self, cxn):
         for c in self.cxns:
-            if c != self.name:
+            if c == self.name:
                 c = cxn
                 # what if the component has the same connection twice?
                 # i.e. a circuit consisting of only a battery and a resistor
@@ -82,6 +82,10 @@ class Component:
                 # potential problem: only the first instance is removed
                 break
         return self.cxns
+
+    @property
+    def is_fully_connected(self):
+        return not self.name in self.cxns
 
     @property
     def power(self):

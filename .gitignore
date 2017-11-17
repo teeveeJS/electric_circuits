@@ -4,8 +4,3 @@
 # ignore tests
 test.py
 temp.py
-
-# not gonna use server after all T_T
-index.html
-main.py
-server.py
