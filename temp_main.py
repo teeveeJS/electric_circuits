@@ -5,49 +5,58 @@ import numpy as np
 
 num_comps = 0
 while not (1 < num_comps < 21):
-    num_comps = int(input("how many components will the circuit contain?"))
+    num_comps = int(input("How many components will the circuit contain?\n>>"))
 
 comps = []
 comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR"]
+comp_data = {
+    "BATTERY": {
+        "lower_bound": 0, #exclusive
+        "upper_bound": 100, #inclusive
+        "msg": "voltage.",
+        "comp": DC_Battery
+    },
+    "JUNCTION": {
+        "lower_bound": 2,
+        "upper_bound": 5,
+        "msg": "the number of connections.",
+        "comp": Junction
+    },
+    "RESISTOR": {
+        "lower_bound": 0,
+        "upper_bound": 1000,
+        "msg": "resistance.",
+        "comp": Resistor
+    },
+    "CAPACITOR": {
+        "lower_bound": 0,
+        "upper_bound": 100,
+        "msg": "capacitance (microfarads).",
+        "comp": Capacitor
+    }
+}
 
 
 for i in range(num_comps):
     comps.append(0)
-    comps[i] = input("what kind of component?").upper()
+    comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
     while not comps[i] in comp_names:
-        comps[i] = input("BATTERY | JUNCTION | RESISTOR | BULB | CAPACITOR").upper()
+        comps[i] = input("BATTERY | JUNCTION | RESISTOR | BULB | CAPACITOR\n>>").upper()
 
-
-    # TODO: make this less stupid
-    # sorry this is sooo ugly ;(
-    if comps[i] == "BATTERY":
-        v = 0
-        while not (0 < v <= 100):
-            v = int(input('please enter voltage'))
-        comps[i] = DC_Battery(i, v)
-    elif comps[i] == "JUNCTION":
-        c = 0
-        while not (2 < c <= 5):
-            c = int(input('please enter the number of connections'))
-        comps[i] = Junction(i, c)
-    elif comps[i] == "RESISTOR":
+    if comps[i] == "BULB":
         r = 0
         while not (0 < r <= 1000):
-            r = int(input('please enter resistance'))
-        comps[i] = Resistor(i, r)
-    elif comps[i] == "BULB":
-        r = 0
-        while not (0 < r <= 1000):
-            r = int(input('please enter resistance'))
+            r = int(input('Please enter resistance.\n>>'))
         w = 0
         while not (0 < w <= 100):
-            w = int(input('please enter wattage'))
+            w = int(input('Please enter wattage.\n>>'))
         comps[i] = Light_Bulb(r, w, i)
-    elif comps[i] == "CAPACITOR":
-        c = 0.0
-        while not (1e-10 < c <= 10.0):
-            c = float(input('please enter capacitance'))
-        comps[i] = Capacitor(i, c, 1)
+    else:
+        elem = comp_data[comps[i]]
+        inp = 0
+        while not (elem["lower_bound"] < inp <= elem["upper_bound"]):
+            inp = float(input("Please enter {0}\n>>".format(elem["msg"])))
+        comps[i] = elem["comp"](i, inp)
 
 wires = []
 
@@ -59,11 +68,9 @@ def show_components():
     for i in range(len(comps)):
         print(i, comps[i])
 
-    print('\n')
-
 
 def show_wires():
-    print("==========")
+    print("\n==========")
     print("WIRES")
     print("==========")
 
@@ -79,7 +86,7 @@ def is_complete():
     # NOTE: the template-circuit doesn't contain Junctions at this point
 
     for i in range(len(comps)):
-        if len((np.where(np.array([wires]) == i))[0]) != comps[i].len_conn:
+        if len((np.where(np.array([wires]) == i))[0]) < 2:
             return False
 
     return True
@@ -97,47 +104,51 @@ def is_conn_valid(c1, c2):
 
     # deal with the indices being out of bounds
     if not (0 <= c1 < len(comps) and 0 <= c2 < len(comps)):
-        print('input values out of bounds')
         return False
 
     return not (c1 == c2 or subsetof([c1, c2], wires) or \
                 comps[c1].is_fully_connected or comps[c2].is_fully_connected)
 
 
-while True:
-    break_signal = False
+while not is_complete(): #True:
+    # break_signal = False
 
     c1, c2 = -2, -2 # just some initial states
     while not is_conn_valid(c1, c2):
         show_components()
         if len(wires) > 0:
             show_wires()
-        print("enter -1 whenever you are done")
-        c1 = int(input("enter start point"))
-        c2 = int(input("enter end point"))
+        # print("enter -1 whenever you are done")
+        c1 = int(input("Enter start point.\n>>"))
+        c2 = int(input("Enter end point.\n>>"))
 
-        if c1 == -1 or c2 == -1:
-            break_signal = True
-            break
+        # if c1 == -1 or c2 == -1:
+        #     break_signal = True
+        #     break
 
     # TODO: some kind of automatic break: len(wires) = factorial(len(comps))
     # theoretical maximum
 
-    if break_signal:
-        if is_complete():
-            print("You have finished building the circuit")
-            break
-        else:
-            print("\nThe circuit is not yet complete!")
-            break_signal = False
+    # if break_signal:
+    #     if is_complete():
+    #         print("You have finished building the circuit")
+    #         break
+    #     else:
+    #         print("\nThe circuit is not yet complete!")
+    #         break_signal = False
 
     comps[c1].add_connection(c2)
     comps[c2].add_connection(c1)
     wires.append([c1, c2])
 
 
+# reformat wires
+for i in range(len(wires)):
+    wires[i] = Wire(wires[i][0], wires[i][1])
 
-# circ = Circuit(comps, wires)
+
+
+circ = Circuit(comps, wires)
 
 
 print('done')

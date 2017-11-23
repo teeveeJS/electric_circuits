@@ -229,7 +229,7 @@ class Multimeter(Component):
         * resistance: the equivalent resistance of the components in between
         """
 
-
+        # will be very easy to implement once the matrix stuff is done
 
         return
 
@@ -286,11 +286,14 @@ class Capacitor(Component):
     kappa: the dielectric constant (1 in vacuum)
     epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
-    def __init__(self, name, A, d=0.01, kappa=1):
+    # should be initialized through capacitance (in microfarads)
+    # A, d, kappa, epsilon don't really matter (dielectric at most)
+    def __init__(self, name, C, kappa=1): #A, d=0.01, kappa=1):
         super().__init__(0, 0, 0, name)
-        self.epsilon = kappa * 8.854e-12
-        self.__C = self.epsilon * A / d
+        # self.epsilon = kappa * 8.854e-12
+        self.__C = C * 1e-06 #self.epsilon * A / d
         self.__Q = self.cpty * self.emf
+        self.__k = kappa
 
     def cpty():
         doc = "The Capacitance property."
@@ -313,3 +316,14 @@ class Capacitor(Component):
             del self.__Q
         return locals()
     chg = property(**chg())
+
+    def kappa():
+        doc = "The _k property."
+        def fget(self):
+            return self.__k
+        def fset(self, value):
+            self.__k = value
+        def fdel(self):
+            del self.__k
+        return locals()
+    kappa = property(**kappa())

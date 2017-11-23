@@ -38,6 +38,7 @@ def subsetof(a, b):
     return len(a) == matches
 
 
+# BUG: does not work for valid 2-component circuits
 def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges=np.array([[None, None]])):
     # mark current node visited
     visited_nodes = np.append(visited_nodes, current_node)
@@ -49,13 +50,13 @@ def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges
     if is_repeating(visited_nodes):
         # no loop found
         print("circuit is repeating: no loop")
-        return None
+        return -1
 
     vtxs = np.fromfunction(lambda i, j: j, (1, len(Graph.vertices)))
     if subsetof(vtxs, visited_nodes):
         # no loop found
         print("all edges traversed: no loop")
-        return None
+        return -1
 
     global total_res
     current_res = np.inf
