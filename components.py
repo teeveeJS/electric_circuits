@@ -14,10 +14,12 @@ class Component:
         self.__I = I_o
         self.__R = R_o
         self.__name = name
-        self.__cxns = np.ones(num_cxns) * self.name
+        self.__cxns = np.ones(num_cxns, dtype='int') * self.name
+
+        self.len_conn = num_cxns
 
         # direction of current in the component
-        self.curr_dir = np.ones(2) * self.name # [start, end]
+        # self.curr_dir = np.ones(2, dtype='int') * self.name # [start, end]
 
     def emf():
         doc = "The emf property."
@@ -63,29 +65,25 @@ class Component:
         return locals()
     cxns = property(**cxns())
 
-    @property
     def add_connection(self, cxn):
-        for c in self.cxns:
-            if c == self.name:
-                c = cxn
+        for i in range(len(self.cxns)):
+            if self.cxns[i] == self.name:
+                self.cxns[i] = cxn
                 # what if the component has the same connection twice?
                 # i.e. a circuit consisting of only a battery and a resistor
                 break
-        return self.cxns
 
-    @property
     def rm_connection(self, cxn):
-        # TODO: handle the erorr case where nothing is removed
-        for c in self.cxns:
-            if c == cxn:
-                c = self.name
-                # potential problem: only the first instance is removed
+        # TODO: handle the (error) case where nothing is removed
+        for i in range(len(self.cxns)):
+            if self.cxns[i] == cxn:
+                self.cxns[i] = self.name
                 break
-        return self.cxns
+                # potential problem: only the first instance is removed
 
     @property
     def is_fully_connected(self):
-        return not self.name in self.cxns
+        return not (self.name in self.cxns)
 
     @property
     def power(self):
@@ -159,8 +157,11 @@ class Ground:
 
 class Junction(Component):
     """For splitting wires."""
-    def __init__(self, name, cxns=3):
-        super().__init__(0, 0, 0, name, cxns)
+    def __init__(self, name, num_cxns=3):
+        super().__init__(0, 0, 0, name, num_cxns)
+
+    def add_end(self):
+        self.cxns = np.append(self.cxns, self.name)
 
 
 class State(Enum):

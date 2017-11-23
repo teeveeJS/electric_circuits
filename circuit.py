@@ -88,8 +88,6 @@ class Circuit:
 
         # TODO: calculate equipotential regions. until then, each Wire is a node
 
-        # add directions to the components' currents
-        
 
         # set up the matrices
         matr_size = len(self.edges) + len(self.vertices)
