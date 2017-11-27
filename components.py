@@ -65,21 +65,20 @@ class Component:
         return locals()
     cxns = property(**cxns())
 
-    def add_connection(self, cxn):
-        for i in range(len(self.cxns)):
-            if self.cxns[i] == self.name:
-                self.cxns[i] = cxn
-                # what if the component has the same connection twice?
-                # i.e. a circuit consisting of only a battery and a resistor
+    def change_connection(self, old_c, new_c):
+        for i in range(self.len_conn):
+            if self.cxns[i] == old_c:
+                self.cxns[i] = new_c
                 break
+
+    def add_connection(self, cxn):
+        self.change_connection(self.name, cxn)
 
     def rm_connection(self, cxn):
         # TODO: handle the (error) case where nothing is removed
-        for i in range(len(self.cxns)):
-            if self.cxns[i] == cxn:
-                self.cxns[i] = self.name
-                break
-                # potential problem: only the first instance is removed
+        # potential problem: only the first instance is removed
+        self.change_connection(cxn, self.name)
+
 
     @property
     def is_fully_connected(self):

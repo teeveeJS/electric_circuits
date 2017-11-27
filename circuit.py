@@ -11,6 +11,8 @@ class Circuit:
         self.__vertices = V
         self.__edges = E
 
+        self.add_junctions()
+
         self.validate()
 
     def vertices():
@@ -49,6 +51,29 @@ class Circuit:
             A[e[1], e[0]] = 1 # the connection goes both ways
 
         return A
+
+    def add_junctions(self):
+        """
+        Inserts a junction into each wire to serve as a node and to avoid
+        2-component circuits from being labelled invalid
+        """
+        start_len = len(self.edges)
+        for w in self.edges[start_len::-1]:
+            if not self.connects_to(w, Junction):
+                # create the new component
+                i_new = len(self.vertices)
+                new_junction = Junction(i_new, 2)
+                new_junction.add_connection(w.start)
+                new_junction.add_connection(w.end)
+                self.vertices = np.append(self.vertices, new_junction)
+                # configure the old component's connections
+                self.vertices[w.start].change_connection(w.end, i_new)
+                self.vertices[w.end].change_connection(w.start, i_new)
+                # create the new wires
+                self.edges = np.append(self.edges, Wire(w.start, i_new))
+                self.edges = np.append(self.edges, Wire(i_new, w.end))
+                # delete the old wire
+                self.edges = np.delete(self.edges, np.where(self.edges == w))
 
     def validate(self):
         """
@@ -127,3 +152,7 @@ class Circuit:
         self.edges = np.insert(self.edges, len(self.edges), Wire(break_edge[1], ground.name), 0)
 
         return None
+
+    def connects_to(self, wire, comp_type):
+        return isinstance(self.vertices[wire.start], comp_type) or \
+               isinstance(self.vertices[wire.end], comp_type)
