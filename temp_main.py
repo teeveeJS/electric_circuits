@@ -122,7 +122,7 @@ while not is_complete():
         show_components()
         if len(wires) > 0:
             show_wires()
-            
+
         c1 = int(input("Enter start point.\n>>"))
         c2 = int(input("Enter end point.\n>>"))
 
@@ -131,7 +131,7 @@ while not is_complete():
     wires.append([c1, c2])
 
 
-# reformat wires
+# reformats wires
 for i in range(len(wires)):
     wires[i] = Wire(wires[i][0], wires[i][1])
 

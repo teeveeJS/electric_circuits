@@ -39,8 +39,6 @@ def subsetof(a, b):
 
 
 def backtracker(Graph, target, current_node, visited_nodes, available_edges):
-    visited_nodes.append(current_node)
-
 
     print(visited_nodes, available_edges, [[target, current_node]])
 
@@ -61,16 +59,20 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
         return -1
 
     for e in available_edges:
+        #TODO: prioritize the path of least resistance instead of just taking the first instance
         if e[0] == current_node:
-            print('e2')
+            visited_nodes.append(current_node)
             total_res += Graph.vertices[current_node].res
             available_edges.pop(available_edges.index(e))
             return backtracker(Graph, target, e[1], visited_nodes, available_edges)
         elif e[1] == current_node:
-            print('e1')
+            visited_nodes.append(current_node)
             total_res += Graph.vertices[current_node].res
             available_edges.pop(available_edges.index(e))
             return backtracker(Graph, target, e[0], visited_nodes, available_edges)
 
-    print('backtracking')
-    return backtracker(Graph, target, visited_nodes[-1], visited_nodes, available_edges)
+    next_node = visited_nodes[-2]
+    print('backtracking to', next_node)
+    # TODO: remove from total_res when backtracking
+    # could return an array instead and compute cost from that
+    return backtracker(Graph, target, next_node, visited_nodes, available_edges)

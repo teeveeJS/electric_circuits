@@ -98,7 +98,7 @@ class Circuit:
                 new_null_comp = Null_Component(i_new)
                 new_null_comp.add_connection(w.start)
                 new_null_comp.add_connection(w.end)
-                self.vertices = np.insert(self.vertices, 0, new_null_comp)
+                self.vertices = np.append(self.vertices, new_null_comp)
 
                 self.split_wire(w, i_new)
 
@@ -131,7 +131,7 @@ class Circuit:
                     global total_res
                     total_res = 0
                     return True # circuit is valid
-
+        print("Circuit is not valid")
         return False # circuit is not valid
 
     def run(self):
@@ -207,13 +207,16 @@ class Circuit:
             comp = self.vertices[i]
             if isinstance(comp, Junction):
                 for conn in comp.cxns:
-                    comp.curr += self.vertices[conn].curr * get_curr_dir(i, conn)
+                    comp.curr += self.vertices[conn].curr * self.get_curr_dir(i, conn)
             elif isinstance(comp, Capacitor):
                 pass
             elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
                 comp.emf = comp.curr * comp.res
             else:
                 pass
+
+
+        self.print_circuit_data()
 
         return 0
 
@@ -228,3 +231,13 @@ class Circuit:
            return -1
         else:
            raise ValueError("Components not connected")
+
+    def print_circuit_data(self):
+        print("============")
+        print("Circuit Data")
+        print("============")
+        for c in self.vertices:
+           if not (isinstance(c, Junction) or isinstance(c, Null_Component)):
+               print(c.name, type(c), 'I:', c.curr, 'V:', c.emf)
+
+        print("============")
