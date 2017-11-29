@@ -33,58 +33,44 @@ def subsetof(a, b):
     matches = 0
     for i in a:
         for j in b:
-            if np.array_equal(i, j):
+            if np.array_equal(i, j) or np.array_equal(i, j[::-1]):
                 matches += 1
-            # order doesn't matter when i and j are still lists
-            elif isinstance(j, list):
-                if np.array_equal(i, j[::-1]):
-                    matches += 1
     return len(a) == matches
 
 
-# BUG: does not work for valid 2-component circuits
-# worked around this by adding junctions
-def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges=np.array([[None, None]])):
-    # mark current node visited
-    visited_nodes = np.append(visited_nodes, current_node)
-    len_vis = len(visited_nodes)
+def backtracker(Graph, target, current_node, visited_nodes, available_edges):
+    visited_nodes.append(current_node)
 
-    print(visited_nodes)
 
-    # check if stuck in an infinite loop: no closed loop
+    print(visited_nodes, available_edges, [[target, current_node]])
+
+
+    global total_res
+    if subsetof([[target, current_node]], available_edges):
+        print("found a loop")
+        total_res += Graph.vertices[current_node].res
+        return total_res
+
     if is_repeating(visited_nodes):
         # no loop found
         print("circuit is repeating: no loop")
         return -1
 
-    vtxs = np.fromfunction(lambda i, j: j, (1, Graph.lenv))
-    if subsetof(vtxs, visited_nodes):
-        # no loop found
-        print("all edges traversed: no loop")
+    if len(available_edges) == 0:
+        print("all edges traversed: no loop found")
         return -1
 
-    global total_res
-    current_res = np.inf
-    current_next = None
+    for e in available_edges:
+        if e[0] == current_node:
+            print('e2')
+            total_res += Graph.vertices[current_node].res
+            available_edges.pop(available_edges.index(e))
+            return backtracker(Graph, target, e[1], visited_nodes, available_edges)
+        elif e[1] == current_node:
+            print('e1')
+            total_res += Graph.vertices[current_node].res
+            available_edges.pop(available_edges.index(e))
+            return backtracker(Graph, target, e[0], visited_nodes, available_edges)
 
-    for n in get_neighbors(Graph, current_node):
-        if not n in visited_nodes and Graph.vertices[n].res < current_res:
-            current_res = Graph.vertices[n].res
-            current_next = n
-
-        elif (not subsetof([[current_node, n]], traversed_edges)) and \
-            (not subsetof([[n, current_node]], traversed_edges)) and \
-            (subsetof([[n, current_node]], Graph.edge_tuples) or \
-            subsetof([[current_node, n]], Graph.edge_tuples)) and \
-            np.array_equal(n, visited_nodes[0]):
-                print("Found a loop!!!")
-                return total_res#, visited_nodes
-
-    if not current_next is None:
-        total_res += current_res
-        traversed_edges = np.append(traversed_edges, [[current_node, current_next]], axis=0)
-        return backtracker(Graph, current_next, visited_nodes, traversed_edges)
-
-    # has no unvisited nodes
     print('backtracking')
-    return backtracker(Graph, visited_nodes[len_vis-2], visited_nodes, traversed_edges)
+    return backtracker(Graph, target, visited_nodes[-1], visited_nodes, available_edges)

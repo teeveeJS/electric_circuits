@@ -115,32 +115,16 @@ def is_conn_valid(c1, c2):
     return not (c1 == c2 or comps[c1].is_fully_connected or comps[c2].is_fully_connected)
 
 
-while not is_complete(): #True:
-    # break_signal = False
+while not is_complete():
 
     c1, c2 = -2, -2 # just some initial states
     while not is_conn_valid(c1, c2):
         show_components()
         if len(wires) > 0:
             show_wires()
-        # print("enter -1 whenever you are done")
+            
         c1 = int(input("Enter start point.\n>>"))
         c2 = int(input("Enter end point.\n>>"))
-
-        # if c1 == -1 or c2 == -1:
-        #     break_signal = True
-        #     break
-
-    # TODO: some kind of automatic break: len(wires) = factorial(len(comps))
-    # theoretical maximum
-
-    # if break_signal:
-    #     if is_complete():
-    #         print("You have finished building the circuit")
-    #         break
-    #     else:
-    #         print("\nThe circuit is not yet complete!")
-    #         break_signal = False
 
     comps[c1].add_connection(c2)
     comps[c2].add_connection(c1)

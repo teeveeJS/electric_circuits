@@ -158,6 +158,12 @@ class Junction(Component):
     #     raise ValueError("Current Direction doesn't apply to Junctions!")
 
 
+class Null_Component(Component):
+    """Added whenever two Junctions are connected to each other"""
+    def __init__(self, name):
+        super().__init__(0, 0, 0, name)
+
+
 class State(Enum):
     ON = True
     OFF = False
@@ -241,7 +247,7 @@ class Resistor(Component):
 
 
 class Light_Bulb(Resistor):
-    def __init__(self, R, W, mame, state=State.OFF):
+    def __init__(self, R, W, name, state=State.OFF):
         super().__init__(0, 0, R, name)
         self.__state = state
         self.__wattage = W

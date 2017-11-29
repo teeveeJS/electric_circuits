@@ -12,8 +12,6 @@ class Circuit:
         self.__vertices = V
         self.__edges = E
 
-        self.add_junctions()
-
         if self.validate():
             self.run()
 
@@ -58,6 +56,18 @@ class Circuit:
 
         return A
 
+    def split_wire(self, wire, new_conn):
+        # configure the old components' connections
+        self.vertices[wire.start].change_connection(wire.end, new_conn)
+        self.vertices[wire.end].change_connection(wire.start, new_conn)
+
+        # create the new wires
+        self.edges = np.append(self.edges, Wire(wire.start, new_conn))
+        self.edges = np.append(self.edges, Wire(new_conn, wire.end))
+
+        # delete the old wire
+        self.edges = np.delete(self.edges, np.where(self.edges == wire))
+
     def add_junctions(self):
         """
         Inserts a junction into each wire to serve as a node and to avoid
@@ -73,19 +83,24 @@ class Circuit:
                 new_junction.add_connection(w.end)
                 self.vertices = np.append(self.vertices, new_junction)
 
-                # configure the old component's connections
-                self.vertices[w.start].change_connection(w.end, i_new)
-                self.vertices[w.end].change_connection(w.start, i_new)
-
-                # create the new wires
-                self.edges = np.append(self.edges, Wire(w.start, i_new))
-                self.edges = np.append(self.edges, Wire(i_new, w.end))
-
-                # delete the old wire
-                self.edges = np.delete(self.edges, np.where(self.edges == w))
+                self.split_wire(w, i_new)
 
         # make the last Junction into a Ground node
         self.vertices[-1].is_ground = True
+
+    def add_nulls(self):
+        """Adds Null_Components to the Circuit so that no two Junctions are
+        connected"""
+        for w in self.edges:
+            if isinstance(self.vertices[w.start], Junction) and \
+               isinstance(self.vertices[w.end], Junction):
+                i_new = self.lenv
+                new_null_comp = Null_Component(i_new)
+                new_null_comp.add_connection(w.start)
+                new_null_comp.add_connection(w.end)
+                self.vertices = np.insert(self.vertices, 0, new_null_comp)
+
+                self.split_wire(w, i_new)
 
     def validate(self):
         """
@@ -110,7 +125,7 @@ class Circuit:
         for comp in self.vertices:
             # add isinstance(comp, Inductor)
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                if backtracker(self, comp.name) > 0:
+                if backtracker(self, comp.name, comp.name, [], self.edge_tuples) > 0:
                     print('valid')
                     # reset total_res
                     global total_res
@@ -121,18 +136,16 @@ class Circuit:
 
     def run(self):
         # this is where all the nodal analysis will take place
-        # self.add_ground()
 
-        # self.fix_curr_directions()
+        # this has to be called first so that the ground node is the last element
+        # in self.vertices
+        self.add_nulls()
+        self.add_junctions()
 
         # set up the matrices
         m_size = self.lenv - 1
         A = np.zeros((m_size, m_size))
         b = np.zeros(m_size)
-
-        # fill with references to the components' currents and voltages
-        x_ref = np.zeros(m_size)
-
 
         # loop through all the nodes and components to fill the matrices
         # fill in the currents
@@ -174,21 +187,39 @@ class Circuit:
                     A[i, c2] = 1. * v_drop
 
         x = solve(A, b)
-        print(x)
-        # equate values of x with the references in x_ref
+        # print(x)
+
+        # equate values of x with the components
+        for i in range(len(x)):
+            comp = self.vertices[i]
+            if isinstance(comp, Junction):
+                comp.emf = x[i]
+            elif isinstance(comp, Capacitor):
+                pass
+            else:
+                comp.curr = x[i]
+
+        # set the emf of the last component (ground) to 0
+        self.vertices[-1].emf = 0 #though it should already be 0 through initialization
+
+        # complete calculations
+        for i in range(self.lenv):
+            comp = self.vertices[i]
+            if isinstance(comp, Junction):
+                for conn in comp.cxns:
+                    comp.curr += self.vertices[conn].curr * get_curr_dir(i, conn)
+            elif isinstance(comp, Capacitor):
+                pass
+            elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
+                comp.emf = comp.curr * comp.res
+            else:
+                pass
 
         return 0
 
     def connects_to(self, wire, comp_type):
         return isinstance(self.vertices[wire.start], comp_type) or \
                isinstance(self.vertices[wire.end], comp_type)
-
-    # def fix_curr_directions(self):
-    #    for c in self.vertices:
-    #        # Junction should not have direction to the current
-    #        # should wires have a direction? Answer: NO
-    #        if not isinstance(c, Junction):
-    #            c.curr_dir = (c.cxns[0], c.cxns[1])
 
     def get_curr_dir(self, node_name, comp_name):
         if self.vertices[comp_name].cxns[0] == node_name:
