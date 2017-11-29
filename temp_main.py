@@ -11,8 +11,8 @@ comps = []
 comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR"]
 comp_data = {
     "BATTERY": {
-        "lower_bound": 0, #exclusive
-        "upper_bound": 100, #inclusive
+        "lower_bound": 1e-03, #exclusive
+        "upper_bound": 100., #inclusive
         "msg": "voltage.",
         "comp": DC_Battery
     },
@@ -23,14 +23,14 @@ comp_data = {
         "comp": Junction
     },
     "RESISTOR": {
-        "lower_bound": 0,
-        "upper_bound": 1000,
+        "lower_bound": 1e-03,
+        "upper_bound": 1000.,
         "msg": "resistance.",
         "comp": Resistor
     },
     "CAPACITOR": {
-        "lower_bound": 0,
-        "upper_bound": 100,
+        "lower_bound": 1e-03,
+        "upper_bound": 100.,
         "msg": "capacitance (microfarads).",
         "comp": Capacitor
     }
@@ -45,11 +45,11 @@ for i in range(num_comps):
 
     if comps[i] == "BULB":
         r = 0
-        while not (0 < r <= 1000):
-            r = int(input('Please enter resistance.\n>>'))
+        while not (1e-03 < r <= 1000.):
+            r = float(input('Please enter resistance.\n>>'))
         w = 0
-        while not (0 < w <= 100):
-            w = int(input('Please enter wattage.\n>>'))
+        while not (1. < w <= 100.):
+            w = float(input('Please enter wattage.\n>>'))
         comps[i] = Light_Bulb(r, w, i)
     else:
         elem = comp_data[comps[i]]
@@ -106,8 +106,13 @@ def is_conn_valid(c1, c2):
     if not (0 <= c1 < len(comps) and 0 <= c2 < len(comps)):
         return False
 
-    return not (c1 == c2 or subsetof([c1, c2], wires) or \
-                comps[c1].is_fully_connected or comps[c2].is_fully_connected)
+    if subsetof([[c1, c2]], wires):
+        if len(comps) != 2:
+            return False
+        else:
+            pass
+
+    return not (c1 == c2 or comps[c1].is_fully_connected or comps[c2].is_fully_connected)
 
 
 while not is_complete(): #True:
@@ -149,6 +154,5 @@ for i in range(len(wires)):
 
 
 circ = Circuit(comps, wires)
-
 
 print('done')

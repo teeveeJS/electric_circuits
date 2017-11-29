@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.linalg import solve
 from components import *
 from algorithms import backtracker, get_neighbor_edges
 
@@ -13,7 +14,8 @@ class Circuit:
 
         self.add_junctions()
 
-        self.validate()
+        if self.validate():
+            self.run()
 
     def vertices():
         doc = "Vertices (components) of the Circuit: an array of Components"
@@ -38,13 +40,17 @@ class Circuit:
     edges = property(**edges())
 
     @property
+    def lenv(self):
+        return len(self.vertices)
+
+    @property
     def edge_tuples(self):
         """Reformats the edges for ease-of-use with some algorithms"""
         return list(map(lambda e: e.pair, self.edges))
 
     @property
     def adjcy_matrix(self):
-        A = np.zeros((len(self.vertices), len(self.vertices)))
+        A = np.zeros((self.lenv, self.lenv))
 
         for e in self.edge_tuples:
             A[e[0], e[1]] = 1
@@ -61,19 +67,25 @@ class Circuit:
         for w in self.edges[start_len::-1]:
             if not self.connects_to(w, Junction):
                 # create the new component
-                i_new = len(self.vertices)
+                i_new = self.lenv
                 new_junction = Junction(i_new, 2)
                 new_junction.add_connection(w.start)
                 new_junction.add_connection(w.end)
                 self.vertices = np.append(self.vertices, new_junction)
+
                 # configure the old component's connections
                 self.vertices[w.start].change_connection(w.end, i_new)
                 self.vertices[w.end].change_connection(w.start, i_new)
+
                 # create the new wires
                 self.edges = np.append(self.edges, Wire(w.start, i_new))
                 self.edges = np.append(self.edges, Wire(i_new, w.end))
+
                 # delete the old wire
                 self.edges = np.delete(self.edges, np.where(self.edges == w))
+
+        # make the last Junction into a Ground node
+        self.vertices[-1].is_ground = True
 
     def validate(self):
         """
@@ -111,48 +123,109 @@ class Circuit:
         # this is where all the nodal analysis will take place
         # self.add_ground()
 
-        # TODO: calculate equipotential regions. until then, each Wire is a node
-
+        # self.fix_curr_directions()
 
         # set up the matrices
-        matr_size = len(self.edges) + len(self.vertices)
-        A = np.array((matr_size, matr_size))
-        b = np.array((1, matr_size))
+        A = np.zeros((self.lenv, self.lenv))
+        b = np.zeros(self.lenv)
+
+        # fill with references to the components' currents and voltages
+        x_ref = np.zeros(self.lenv)
+
 
         # loop through all the nodes and components to fill the matrices
+        # fill in the currents
+        # possible problem: what if there are junctions connected to each other?
+        for i in range(self.lenv):
+            comp = self.vertices[i]
+            if isinstance(comp, Junction):
+                # current into element: -1
+                # current out of element: 1
+                for conn in comp.cxns:
+                    A[i, conn] = self.get_curr_dir(i, conn)
+                # drop in current
+                # 0 for all components except capacitors and inductors
+                if isinstance(self.vertices[conn], Capacitor): #\
+                   # or isinstance(self.vertices[conn], Inductor):
+                    b[i] = self.vertices[conn].curr_consumption()
+                else:
+                    b[i] = 0. # redundant; b already initialized to 0's
+            else:
+                # voltages
+                v_drop = -1.
+
+                if isinstance(comp, DC_Battery):
+                    b[i] = comp.emf
+                    v_drop = 1.
+                elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
+                    b[i] = 0.
+                    A[i, i] = comp.res
+                elif isinstance(comp, Capacitor):
+                    # TODO
+                    pass
 
 
-        return None
+                c1 = comp.cxns[0]
+                c2 = comp.cxns[1]
+                if isinstance(c1, Junction) and c1.is_ground:
+                    A[i, c1] = 0
+                else:
+                    A[i, c1] = -1. * v_drop
+                if isinstance(c2, Junction) and c2.is_ground:
+                    A[i, c2] = 0
+                else:
+                    A[i, c2] = 1. * v_drop
 
-    def add_component(self, component):
-        self.vertices = np.insert(self.vertices, len(self.vertices), component)
-        return None
 
-    def add_ground(self):
-        # add a Ground to the circuit
-        ground = Ground(len(self.vertices))
-        self.add_component(ground)
-        # the circuit needs to be broken open so that the Ground can be connected
-        break_edge = None
-        for comp in self.vertices:
-            # simply place the Ground next to the first found emf source
-            if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                break_edge = get_neighbor_edges(self, comp.name)[0]
-                break
-        # delete break_edge from self.edges
-        # then form two new Wires to self.edges with Ground inserted in between
-        for i in range(len(self.edges)):
-            if np.array_equal(self.edges[i], break_edge):
-                self.edges = np.delete(self.edges, i, 0)
-                break
 
-        print(self.edge_tuples)
+        print('a', A)
+        print('b', b)
+        x = solve(A, b)
+        print(x)
+        # equate values of x with the references in x_ref
 
-        self.edges = np.insert(self.edges, len(self.edges), Wire(break_edge[0], ground.name), 0)
-        self.edges = np.insert(self.edges, len(self.edges), Wire(break_edge[1], ground.name), 0)
+        return 0
 
-        return None
+    # def add_ground(self):
+    #     # add a Ground to the circuit
+    #     ground = Ground(self.lenv)
+    #     self.vertices = np.append(self.vertices, ground)
+    #     # the circuit needs to be broken open so that the Ground can be connected
+    #     break_edge = None
+    #     for comp in self.vertices:
+    #         # simply place the Ground next to the first found emf source
+    #         if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
+    #             break_edge = get_neighbor_edges(self, comp.name)[0]
+    #             break
+    #     # delete break_edge from self.edges
+    #     # then form two new Wires to self.edges with Ground inserted in between
+    #     for i in range(len(self.edges)):
+    #         if np.array_equal(self.edges[i], break_edge):
+    #             self.edges = np.delete(self.edges, i, 0)
+    #             break
+    #
+    #     # print(self.edge_tuples)
+    #
+    #     self.edges = np.append(self.edges, Wire(break_edge[0], ground.name))
+    #     self.edges = np.append(self.edges, Wire(break_edge[1], ground.name))
+    #
+    #     return None
 
     def connects_to(self, wire, comp_type):
         return isinstance(self.vertices[wire.start], comp_type) or \
                isinstance(self.vertices[wire.end], comp_type)
+
+    # def fix_curr_directions(self):
+    #    for c in self.vertices:
+    #        # Junction should not have direction to the current
+    #        # should wires have a direction? Answer: NO
+    #        if not isinstance(c, Junction):
+    #            c.curr_dir = (c.cxns[0], c.cxns[1])
+
+    def get_curr_dir(self, node_name, comp_name):
+        if self.vertices[comp_name].cxns[0] == node_name:
+           return 1
+        elif self.vertices[comp_name].cxns[1] == node_name:
+           return -1
+        else:
+           raise ValueError("Components not connected")

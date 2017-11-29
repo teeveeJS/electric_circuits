@@ -19,7 +19,7 @@ class Component:
         self.len_conn = num_cxns
 
         # direction of current in the component
-        # self.curr_dir = np.ones(2, dtype='int') * self.name # [start, end]
+        # self.curr_dir = [self.name, self.name] # (start, end)
 
     def emf():
         doc = "The emf property."
@@ -135,32 +135,27 @@ class Wire(Component):
     pair = property(**pair())
 
 
-class Ground:
-    """
-    Grounds will only be used in circuit analysis; not available to the users
-    """
-    def __init__(self, name):
-        self.__name = name
-
-    def name():
-        doc = "The _name property."
-        def fget(self):
-            return self.__name
-        def fset(self, value):
-            self.__name = value
-        def fdel(self):
-            del self.__name
-        return locals()
-    name = property(**name())
+# class Ground(Component):
+#     """
+#     Grounds will only be used in circuit analysis; not available to the users
+#     """
+#     def __init__(self, name):
+#         super().__init__(0, 0, 0, name)
 
 
 class Junction(Component):
     """For splitting wires."""
     def __init__(self, name, num_cxns=3):
-        super().__init__(0, 0, 0, name, num_cxns)
+        super().__init__(0, 0, 0, name, int(num_cxns))
+        # del self.curr_dir
+        self.is_ground = False
 
     def add_end(self):
         self.cxns = np.append(self.cxns, self.name)
+
+    # @property #override
+    # def curr_dir(self):
+    #     raise ValueError("Current Direction doesn't apply to Junctions!")
 
 
 class State(Enum):
@@ -247,7 +242,7 @@ class Resistor(Component):
 
 class Light_Bulb(Resistor):
     def __init__(self, R, W, mame, state=State.OFF):
-        super().__init(0, 0, R, name)
+        super().__init__(0, 0, R, name)
         self.__state = state
         self.__wattage = W
 
@@ -286,7 +281,7 @@ class Capacitor(Component):
     epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
     # should be initialized through capacitance (in microfarads)
-    # A, d, kappa, epsilon don't really matter (dielectric at most)
+    # A, d, kappa, epsilon don't really matter (kappa at most)
     def __init__(self, name, C, kappa=1): #A, d=0.01, kappa=1):
         super().__init__(0, 0, 0, name)
         # self.epsilon = kappa * 8.854e-12
@@ -317,7 +312,7 @@ class Capacitor(Component):
     chg = property(**chg())
 
     def kappa():
-        doc = "The _k property."
+        doc = "The dielectric constant."
         def fget(self):
             return self.__k
         def fset(self, value):
@@ -326,3 +321,6 @@ class Capacitor(Component):
             del self.__k
         return locals()
     kappa = property(**kappa())
+
+    def curr_consumption(self):
+        pass

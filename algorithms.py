@@ -35,10 +35,15 @@ def subsetof(a, b):
         for j in b:
             if np.array_equal(i, j):
                 matches += 1
+            # order doesn't matter when i and j are still lists
+            elif isinstance(j, list):
+                if np.array_equal(i, j[::-1]):
+                    matches += 1
     return len(a) == matches
 
 
 # BUG: does not work for valid 2-component circuits
+# worked around this by adding junctions
 def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges=np.array([[None, None]])):
     # mark current node visited
     visited_nodes = np.append(visited_nodes, current_node)
@@ -52,7 +57,7 @@ def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges
         print("circuit is repeating: no loop")
         return -1
 
-    vtxs = np.fromfunction(lambda i, j: j, (1, len(Graph.vertices)))
+    vtxs = np.fromfunction(lambda i, j: j, (1, Graph.lenv))
     if subsetof(vtxs, visited_nodes):
         # no loop found
         print("all edges traversed: no loop")
@@ -83,22 +88,3 @@ def backtracker(Graph, current_node, visited_nodes=np.array([]), traversed_edges
     # has no unvisited nodes
     print('backtracking')
     return backtracker(Graph, visited_nodes[len_vis-2], visited_nodes, traversed_edges)
-
-
-# def equipotentials(Graph, eqprs=np.array([]), start_edge=None):
-#     """calculate all the equipotential regions in a circuit"""
-#
-#     if start_edge is None:
-#         start_edge = Graph.edge_tuples[0]
-#
-#     current_region = np.array([])
-#     current_edge = start_edge
-#
-#     while isinstance(Graph.vertices[current_edge[0]], Junction):
-#         if not current_edge in eqprs:
-#             current_region = np.append(current_region, current_edge)
-#         # update current_edge
-#
-#
-#
-#     return eqprs
