@@ -1,13 +1,17 @@
 from components import *
 from circuit import Circuit
 from algorithms import subsetof
+from sample_circuits import create_samples
+import sys
 import numpy as np
 
 num_comps = 0
-while not (1 < num_comps < 21):
+while not (1 <= num_comps < 21):
+    print("Enter 1 to load Circuit from file")
     num_comps = int(input("How many components will the circuit contain?\n>>"))
 
 comps = []
+wires = []
 comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR"]
 comp_data = {
     "BATTERY": {
@@ -37,11 +41,26 @@ comp_data = {
 }
 
 
+if num_comps == 1:
+    create_samples()
+
+    print("pls be nice i'm not gonna error check")
+    file_name = input("Enter file name.\n>>").strip() + ".npy"
+    comps, wires = np.load(file_name)
+
+    # print(comps, wires)
+
+    circ = Circuit(comps, wires)
+
+    print('done')
+    sys.exit()
+
+
 for i in range(num_comps):
     comps.append(0)
     comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
     while not comps[i] in comp_names:
-        comps[i] = input("BATTERY | JUNCTION | RESISTOR | BULB | CAPACITOR\n>>").upper()
+        comps[i] = input(" | ".join(comp_data.keys()) + " | BULB\n>>").upper()
 
     if comps[i] == "BULB":
         r = 0
@@ -58,7 +77,6 @@ for i in range(num_comps):
             inp = float(input("Please enter {0}\n>>".format(elem["msg"])))
         comps[i] = elem["comp"](i, inp)
 
-wires = []
 
 def show_components():
     print("==========")

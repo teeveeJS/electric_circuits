@@ -4,3 +4,6 @@
 # ignore tests
 test.py
 temp.py
+
+#ignore data files
+*.npy

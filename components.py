@@ -79,6 +79,12 @@ class Component:
         # potential problem: only the first instance is removed
         self.change_connection(cxn, self.name)
 
+    def update_connections(self, wires):
+        for w in wires:
+            if w.start == self.name:
+                self.add_connection(w.end)
+            elif w.end == self.name:
+                self.add_connection(w.start)
 
     @property
     def is_fully_connected(self):

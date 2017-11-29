@@ -81,12 +81,16 @@ class Circuit:
                 new_junction = Junction(i_new, 2)
                 new_junction.add_connection(w.start)
                 new_junction.add_connection(w.end)
+
+                print('adding junction', i_new, w.start, w.end)
                 self.vertices = np.append(self.vertices, new_junction)
 
                 self.split_wire(w, i_new)
 
         # make the last Junction into a Ground node
         self.vertices[-1].is_ground = True
+
+        self.update_comp_cxns()
 
     def add_nulls(self):
         """Adds Null_Components to the Circuit so that no two Junctions are
@@ -101,6 +105,8 @@ class Circuit:
                 self.vertices = np.append(self.vertices, new_null_comp)
 
                 self.split_wire(w, i_new)
+
+        self.update_comp_cxns()
 
     def validate(self):
         """
@@ -141,6 +147,9 @@ class Circuit:
         # in self.vertices
         self.add_nulls()
         self.add_junctions()
+
+        # self.print_circuit_data([], True)
+
 
         # set up the matrices
         m_size = self.lenv - 1
@@ -232,12 +241,20 @@ class Circuit:
         else:
            raise ValueError("Components not connected")
 
-    def print_circuit_data(self):
+    def print_circuit_data(self, ignore=[Junction, Null_Component], w=False):
         print("============")
         print("Circuit Data")
         print("============")
         for c in self.vertices:
-           if not (isinstance(c, Junction) or isinstance(c, Null_Component)):
+           if not type(c) in ignore:
                print(c.name, type(c), 'I:', c.curr, 'V:', c.emf)
 
         print("============")
+
+        if w:
+            for wire in self.edges:
+                print("[{0}, {1}]".format(wire.start, wire.end))
+
+    def update_comp_cxns(self):
+        for c in self.vertices:
+            c.update_connections(self.edges)
