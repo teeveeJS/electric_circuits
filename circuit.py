@@ -126,17 +126,18 @@ class Circuit:
         # self.fix_curr_directions()
 
         # set up the matrices
-        A = np.zeros((self.lenv, self.lenv))
-        b = np.zeros(self.lenv)
+        m_size = self.lenv - 1
+        A = np.zeros((m_size, m_size))
+        b = np.zeros(m_size)
 
         # fill with references to the components' currents and voltages
-        x_ref = np.zeros(self.lenv)
+        x_ref = np.zeros(m_size)
 
 
         # loop through all the nodes and components to fill the matrices
         # fill in the currents
         # possible problem: what if there are junctions connected to each other?
-        for i in range(self.lenv):
+        for i in range(m_size): # will go over every component except for the ground node
             comp = self.vertices[i]
             if isinstance(comp, Junction):
                 # current into element: -1
@@ -167,49 +168,16 @@ class Circuit:
 
                 c1 = comp.cxns[0]
                 c2 = comp.cxns[1]
-                if isinstance(c1, Junction) and c1.is_ground:
-                    A[i, c1] = 0
-                else:
+                if not (isinstance(self.vertices[c1], Junction) and self.vertices[c1].is_ground):
                     A[i, c1] = -1. * v_drop
-                if isinstance(c2, Junction) and c2.is_ground:
-                    A[i, c2] = 0
-                else:
+                if not(isinstance(self.vertices[c2], Junction) and self.vertices[c2].is_ground):
                     A[i, c2] = 1. * v_drop
 
-
-
-        print('a', A)
-        print('b', b)
         x = solve(A, b)
         print(x)
         # equate values of x with the references in x_ref
 
         return 0
-
-    # def add_ground(self):
-    #     # add a Ground to the circuit
-    #     ground = Ground(self.lenv)
-    #     self.vertices = np.append(self.vertices, ground)
-    #     # the circuit needs to be broken open so that the Ground can be connected
-    #     break_edge = None
-    #     for comp in self.vertices:
-    #         # simply place the Ground next to the first found emf source
-    #         if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-    #             break_edge = get_neighbor_edges(self, comp.name)[0]
-    #             break
-    #     # delete break_edge from self.edges
-    #     # then form two new Wires to self.edges with Ground inserted in between
-    #     for i in range(len(self.edges)):
-    #         if np.array_equal(self.edges[i], break_edge):
-    #             self.edges = np.delete(self.edges, i, 0)
-    #             break
-    #
-    #     # print(self.edge_tuples)
-    #
-    #     self.edges = np.append(self.edges, Wire(break_edge[0], ground.name))
-    #     self.edges = np.append(self.edges, Wire(break_edge[1], ground.name))
-    #
-    #     return None
 
     def connects_to(self, wire, comp_type):
         return isinstance(self.vertices[wire.start], comp_type) or \
