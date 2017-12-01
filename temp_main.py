@@ -69,13 +69,13 @@ for i in range(num_comps):
         w = 0
         while not (1. < w <= 100.):
             w = float(input('Please enter wattage.\n>>'))
-        comps[i] = Light_Bulb(r, w, i)
+        comps[i] = Light_Bulb(r, w)
     else:
         elem = comp_data[comps[i]]
         inp = 0
         while not (elem["lower_bound"] < inp <= elem["upper_bound"]):
             inp = float(input("Please enter {0}\n>>".format(elem["msg"])))
-        comps[i] = elem["comp"](i, inp)
+        comps[i] = elem["comp"](inp)
 
 
 def show_components():
@@ -153,6 +153,11 @@ while not is_complete():
 for i in range(len(wires)):
     wires[i] = Wire(wires[i][0], wires[i][1])
 
+
+if input("Would you like to save the circuit?\n>>").strip() == "y":
+    print("again, pls be nice..")
+    c_name = input("Enter file name without extension\n>>").strip()
+    np.save(c_name, np.array([comps, wires]))
 
 
 circ = Circuit(comps, wires)

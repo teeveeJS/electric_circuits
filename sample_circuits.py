@@ -4,8 +4,8 @@ from components import *
 def create_samples():
     c1 = np.array([
         [
-            DC_Battery(0, 12),
-            Resistor(1, 5)
+            DC_Battery(12),
+            Resistor(5)
         ],
         [
             Wire(0, 1),
@@ -17,14 +17,14 @@ def create_samples():
 
     c2 = np.array([
         [
-            DC_Battery(0, 100),
-            Junction(1),
-            Junction(2),
-            Resistor(3, 50),
-            Resistor(4, 50),
-            Resistor(5, 50),
-            Junction(6),
-            Junction(7)
+            DC_Battery(100),
+            Junction(),
+            Junction(),
+            Resistor(50),
+            Resistor(50),
+            Resistor(50),
+            Junction(),
+            Junction()
         ],
         [
             Wire(0, 1),
@@ -40,3 +40,16 @@ def create_samples():
         ]
     ])
     np.save("c2", c2)
+
+
+    c3 = np.array([
+        [
+            Capacitor(100, v_init=12),
+            Resistor(1000)
+        ],
+        [
+            Wire(0, 1),
+            Wire(1, 0)
+        ]
+    ])
+    np.save("c3", c3)

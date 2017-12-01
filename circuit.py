@@ -1,7 +1,10 @@
 import numpy as np
 from numpy.linalg import solve
+import scipy as sc
+from scipy.sparse.linalg import spsolve
+import matplotlib.pyplot as plt
 from components import *
-from algorithms import backtracker, get_neighbor_edges
+from algorithms import backtracker
 
 class Circuit:
     """
@@ -12,8 +15,26 @@ class Circuit:
         self.__vertices = V
         self.__edges = E
 
+        self.t_step = 0.01
+        self.num_steps = 100
+        self.t_hist = np.linspace(0.0, self.t_step*self.num_steps, self.num_steps)
+
+        self.update_comp_cxns()
+
         if self.validate():
-            self.run()
+
+            # this has to be called first so that the ground node is the last element
+            # in self.vertices
+            self.add_nulls()
+            self.add_junctions()
+
+            self.print_circuit_data()
+
+            for _ in range(self.num_steps):
+                self.run()
+
+            self.print_circuit_data()
+            self.graph_circuit_data()
 
     def vertices():
         doc = "Vertices (components) of the Circuit: an array of Components"
@@ -46,16 +67,6 @@ class Circuit:
         """Reformats the edges for ease-of-use with some algorithms"""
         return list(map(lambda e: e.pair, self.edges))
 
-    @property
-    def adjcy_matrix(self):
-        A = np.zeros((self.lenv, self.lenv))
-
-        for e in self.edge_tuples:
-            A[e[0], e[1]] = 1
-            A[e[1], e[0]] = 1 # the connection goes both ways
-
-        return A
-
     def split_wire(self, wire, new_conn):
         # configure the old components' connections
         self.vertices[wire.start].change_connection(wire.end, new_conn)
@@ -78,11 +89,11 @@ class Circuit:
             if not self.connects_to(w, Junction):
                 # create the new component
                 i_new = self.lenv
-                new_junction = Junction(i_new, 2)
+                new_junction = Junction(2)
                 new_junction.add_connection(w.start)
                 new_junction.add_connection(w.end)
 
-                print('adding junction', i_new, w.start, w.end)
+                # print('adding junction', i_new, w.start, w.end)
                 self.vertices = np.append(self.vertices, new_junction)
 
                 self.split_wire(w, i_new)
@@ -92,6 +103,10 @@ class Circuit:
 
         self.update_comp_cxns()
 
+
+
+        self.print_circuit_data([], w=True)
+
     def add_nulls(self):
         """Adds Null_Components to the Circuit so that no two Junctions are
         connected"""
@@ -99,7 +114,7 @@ class Circuit:
             if isinstance(self.vertices[w.start], Junction) and \
                isinstance(self.vertices[w.end], Junction):
                 i_new = self.lenv
-                new_null_comp = Null_Component(i_new)
+                new_null_comp = Null_Component()
                 new_null_comp.add_connection(w.start)
                 new_null_comp.add_connection(w.end)
                 self.vertices = np.append(self.vertices, new_null_comp)
@@ -128,10 +143,11 @@ class Circuit:
             * When found, break and return True
             * If not found, the circuit is not valid
         """
-        for comp in self.vertices:
+        for i in range(self.lenv):
             # add isinstance(comp, Inductor)
+            comp = self.vertices[i]
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
-                if backtracker(self, comp.name, comp.name, [], self.edge_tuples) > 0:
+                if backtracker(self, i, i, [], self.edge_tuples) > 0:
                     print('valid')
                     # reset total_res
                     global total_res
@@ -142,11 +158,6 @@ class Circuit:
 
     def run(self):
         # this is where all the nodal analysis will take place
-
-        # this has to be called first so that the ground node is the last element
-        # in self.vertices
-        self.add_nulls()
-        self.add_junctions()
 
         # self.print_circuit_data([], True)
 
@@ -166,26 +177,16 @@ class Circuit:
                 # current out of element: 1
                 for conn in comp.cxns:
                     A[i, conn] = self.get_curr_dir(i, conn)
-                # drop in current
-                # 0 for all components except capacitors and inductors
-                if isinstance(self.vertices[conn], Capacitor): #\
-                   # or isinstance(self.vertices[conn], Inductor):
-                    b[i] = self.vertices[conn].curr_consumption()
-                else:
-                    b[i] = 0. # redundant; b already initialized to 0's
             else:
                 # voltages
                 v_drop = -1.
 
-                if isinstance(comp, DC_Battery):
+                if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
                     b[i] = comp.emf
                     v_drop = 1.
                 elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
                     b[i] = 0.
                     A[i, i] = comp.res
-                elif isinstance(comp, Capacitor):
-                    # TODO
-                    pass
 
 
                 c1 = comp.cxns[0]
@@ -203,13 +204,15 @@ class Circuit:
             comp = self.vertices[i]
             if isinstance(comp, Junction):
                 comp.emf = x[i]
-            elif isinstance(comp, Capacitor):
-                pass
+            # elif isinstance(comp, Capacitor):
+            #     pass
             else:
                 comp.curr = x[i]
 
-        # set the emf of the last component (ground) to 0
-        self.vertices[-1].emf = 0 #though it should already be 0 through initialization
+                # reverse current direction if necessary
+                # if comp.curr < 0:
+                #     comp.curr *= -1
+                #     comp.cxns = comp.cxns[::-1]
 
         # complete calculations
         for i in range(self.lenv):
@@ -218,14 +221,15 @@ class Circuit:
                 for conn in comp.cxns:
                     comp.curr += self.vertices[conn].curr * self.get_curr_dir(i, conn)
             elif isinstance(comp, Capacitor):
-                pass
+                comp.v_hist = np.append(comp.v_hist, comp.emf)
+
+                # print(comp.emf, comp.curr)
+
+                comp.emf += comp.curr * self.t_step / comp.cpty
             elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
                 comp.emf = comp.curr * comp.res
             else:
                 pass
-
-
-        self.print_circuit_data()
 
         return 0
 
@@ -245,9 +249,10 @@ class Circuit:
         print("============")
         print("Circuit Data")
         print("============")
-        for c in self.vertices:
-           if not type(c) in ignore:
-               print(c.name, type(c), 'I:', c.curr, 'V:', c.emf)
+        for i in range(self.lenv):
+            c = self.vertices[i]
+            if not type(c) in ignore:
+                print(i, type(c), 'I:', c.curr, 'V:', c.emf)#, c.cxns)
 
         print("============")
 
@@ -255,6 +260,19 @@ class Circuit:
             for wire in self.edges:
                 print("[{0}, {1}]".format(wire.start, wire.end))
 
-    def update_comp_cxns(self):
+    def graph_circuit_data(self, comps=[Capacitor], viq=0):
+        """
+        Graph data of certain components
+        params:
+            comps: list. types to graph
+            viq: int. Voltage (0), Current (1), Charge (2) [only for capacitors]
+        """
+        #TODO: make subplots
         for c in self.vertices:
-            c.update_connections(self.edges)
+            if type(c) in comps:
+                plt.plot(self.t_hist, [c.v_hist, c.i_hist, c.q_hist][viq])
+        plt.show()
+
+    def update_comp_cxns(self):
+        for i in range(self.lenv):
+            self.vertices[i].update_connections(i, self.edges)

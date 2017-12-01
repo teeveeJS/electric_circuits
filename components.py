@@ -7,19 +7,17 @@ class Component:
     emf: voltage drop across the component
     curr: the current through the component
     res: resistance of the component
-    name: vertex number of the component
     """
-    def __init__(self, V_o, I_o, R_o, name, num_cxns=2):
+    def __init__(self, V_o, I_o, R_o, num_cxns=2):
         self.__emf = V_o
         self.__I = I_o
         self.__R = R_o
-        self.__name = name
-        self.__cxns = np.ones(num_cxns, dtype='int') * self.name
+        self.__cxns = np.ones(num_cxns, dtype='int') * -1
 
         self.len_conn = num_cxns
 
-        # direction of current in the component
-        # self.curr_dir = [self.name, self.name] # (start, end)
+        self.__v_hist = np.array([])
+        self.__i_hist = np.array([])
 
     def emf():
         doc = "The emf property."
@@ -65,6 +63,28 @@ class Component:
         return locals()
     cxns = property(**cxns())
 
+    def v_hist():
+        doc = "Voltage History."
+        def fget(self):
+            return self.__v_hist
+        def fset(self, value):
+            self.__v_hist = value
+        def fdel(self):
+            del self.__v_hist
+        return locals()
+    v_hist = property(**v_hist())
+
+    def i_hist():
+        doc = "Current (I) History."
+        def fget(self):
+            return self.__i_hist
+        def fset(self, value):
+            self.__i_hist = value
+        def fdel(self):
+            del self.__i_hist
+        return locals()
+    i_hist = property(**i_hist())
+
     def change_connection(self, old_c, new_c):
         for i in range(self.len_conn):
             if self.cxns[i] == old_c:
@@ -72,37 +92,33 @@ class Component:
                 break
 
     def add_connection(self, cxn):
-        self.change_connection(self.name, cxn)
+        self.change_connection(-1, cxn)
 
     def rm_connection(self, cxn):
         # TODO: handle the (error) case where nothing is removed
         # potential problem: only the first instance is removed
-        self.change_connection(cxn, self.name)
+        self.change_connection(cxn, -1)
 
-    def update_connections(self, wires):
+    def update_connections(self, name, wires):
         for w in wires:
-            if w.start == self.name:
+            if w.start == name:
                 self.add_connection(w.end)
-            elif w.end == self.name:
+            elif w.end == name:
                 self.add_connection(w.start)
 
     @property
     def is_fully_connected(self):
-        return not (self.name in self.cxns)
+        return not (-1 in self.cxns)
 
     @property
     def power(self):
         """Power dissipated by the element"""
         return self.curr * self.emf
 
-    @property
-    def name(self):
-        return self.__name
-
 
 class Wire(Component):
     def __init__(self, start, end):
-        super().__init__(0, 0, 0, -1)
+        super().__init__(0, 0, 0)
         self.__start = start
         self.__end = end
         self.__pair = (self.start, self.end)
@@ -141,33 +157,20 @@ class Wire(Component):
     pair = property(**pair())
 
 
-# class Ground(Component):
-#     """
-#     Grounds will only be used in circuit analysis; not available to the users
-#     """
-#     def __init__(self, name):
-#         super().__init__(0, 0, 0, name)
-
-
 class Junction(Component):
     """For splitting wires."""
-    def __init__(self, name, num_cxns=3):
-        super().__init__(0, 0, 0, name, int(num_cxns))
-        # del self.curr_dir
+    def __init__(self, num_cxns=3):
+        super().__init__(0, 0, 0, int(num_cxns))
         self.is_ground = False
 
     def add_end(self):
-        self.cxns = np.append(self.cxns, self.name)
-
-    # @property #override
-    # def curr_dir(self):
-    #     raise ValueError("Current Direction doesn't apply to Junctions!")
+        self.cxns = np.append(self.cxns, -1)
 
 
 class Null_Component(Component):
     """Added whenever two Junctions are connected to each other"""
-    def __init__(self, name):
-        super().__init__(0, 0, 0, name)
+    def __init__(self):
+        super().__init__(0, 0, 0)
 
 
 class State(Enum):
@@ -176,8 +179,8 @@ class State(Enum):
 
 
 class Switch(Component):
-    def __init__(self, name, state=State.ON): #probably not the best use of enums
-        super().__init__(self, 0, 0, 0, name)
+    def __init__(self, state=State.ON): #probably not the best use of enums
+        super().__init__(self, 0, 0, 0)
         self.__state = state
 
     def state():
@@ -199,8 +202,8 @@ class Meter_Type(Enum):
 
 
 class Multimeter(Component):
-    def __init__(self, name, meter_type=Meter_Type.VOLTMETER):
-        super().__init__(0, 0, 0, name)
+    def __init__(self, meter_type=Meter_Type.VOLTMETER):
+        super().__init__(0, 0, 0)
         self.__meter_type = meter_type
         self.__reading
 
@@ -242,19 +245,19 @@ class Multimeter(Component):
 
 class DC_Battery(Component):
     """Direct Current emf source"""
-    def __init__(self, name, V=3, R=0):
+    def __init__(self, V=3, R=0):
         #R represents the battery's internal resistance
-        super().__init__(V, 0, R, name)
+        super().__init__(V, 0, R)
 
 
 class Resistor(Component):
-    def __init__(self, name, R=5):
-        super().__init__(0, 0, R, name)
+    def __init__(self, R=5):
+        super().__init__(0, 0, R)
 
 
 class Light_Bulb(Resistor):
-    def __init__(self, R, W, name, state=State.OFF):
-        super().__init__(0, 0, R, name)
+    def __init__(self, R, W, state=State.OFF):
+        super().__init__(0, 0, R)
         self.__state = state
         self.__wattage = W
 
@@ -294,12 +297,14 @@ class Capacitor(Component):
     """
     # should be initialized through capacitance (in microfarads)
     # A, d, kappa, epsilon don't really matter (kappa at most)
-    def __init__(self, name, C, kappa=1): #A, d=0.01, kappa=1):
-        super().__init__(0, 0, 0, name)
+    def __init__(self, C, kappa=1, v_init=0): #A, d=0.01, kappa=1):
+        super().__init__(v_init, 0, 0)
         # self.epsilon = kappa * 8.854e-12
         self.__C = C * 1e-06 #self.epsilon * A / d
         self.__Q = self.cpty * self.emf
         self.__k = kappa
+
+        self.__q_hist = np.array([])
 
     def cpty():
         doc = "The Capacitance property."
@@ -334,5 +339,13 @@ class Capacitor(Component):
         return locals()
     kappa = property(**kappa())
 
-    def curr_consumption(self):
-        pass
+    def q_hist():
+        doc = "Charge History."
+        def fget(self):
+            return self.__q_hist
+        def fset(self, value):
+            self.__q_hist = value
+        def fdel(self):
+            del self.__q_hist
+        return locals()
+    q_hist = property(**q_hist())
