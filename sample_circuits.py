@@ -63,7 +63,7 @@ def create_samples():
         [
             Capacitor(100),
             Resistor(1000),
-            Battery(12)
+            DC_Battery(12)
         ],
         [
             Wire(0, 1),
