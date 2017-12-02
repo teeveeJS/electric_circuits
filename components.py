@@ -349,3 +349,23 @@ class Capacitor(Component):
             del self.__q_hist
         return locals()
     q_hist = property(**q_hist())
+
+
+class Inductor(Component):
+    """
+    L: inductance
+    """
+    def __init__(self, L):
+        super().__init__(0, 0, 0) #TODO: has either v_init or i_init (maybe r_init?)
+        self.__L = L
+
+    def L():
+        doc = "The _L property."
+        def fget(self):
+            return self.__L
+        def fset(self, value):
+            self.__L = value
+        def fdel(self):
+            del self.__L
+        return locals()
+    L = property(**L())

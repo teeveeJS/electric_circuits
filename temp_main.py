@@ -48,8 +48,6 @@ if num_comps == 1:
     file_name = input("Enter file name.\n>>").strip() + ".npy"
     comps, wires = np.load(file_name)
 
-    # print(comps, wires)
-
     circ = Circuit(comps, wires)
 
     print('done')
@@ -150,6 +148,7 @@ while not is_complete():
 
 
 # reformats wires
+#TODO: get rid of this. i.e. directly append Wires
 for i in range(len(wires)):
     wires[i] = Wire(wires[i][0], wires[i][1])
 

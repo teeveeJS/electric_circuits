@@ -181,10 +181,10 @@ class Circuit:
                 # voltages
                 v_drop = -1.
 
-                if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
+                if type(comp) in [DC_Battery, Capacitor]:
                     b[i] = comp.emf
                     v_drop = 1.
-                elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
+                elif type(comp) in [Resistor, Light_Bulb]:
                     b[i] = 0.
                     A[i, i] = comp.res
 
@@ -204,8 +204,6 @@ class Circuit:
             comp = self.vertices[i]
             if isinstance(comp, Junction):
                 comp.emf = x[i]
-            # elif isinstance(comp, Capacitor):
-            #     pass
             else:
                 comp.curr = x[i]
 
@@ -226,7 +224,7 @@ class Circuit:
                 # print(comp.emf, comp.curr)
 
                 comp.emf += comp.curr * self.t_step / comp.cpty
-            elif isinstance(comp, Resistor) or isinstance(comp, Light_Bulb):
+            elif type(comp) in [Resistor, Light_Bulb]:
                 comp.emf = comp.curr * comp.res
             else:
                 pass

@@ -2,6 +2,7 @@ from components import *
 
 
 def create_samples():
+    # a very simple circuit
     c1 = np.array([
         [
             DC_Battery(12),
@@ -15,6 +16,7 @@ def create_samples():
     np.save("c1", c1)
 
 
+    # a more complex circuit
     c2 = np.array([
         [
             DC_Battery(100),
@@ -42,6 +44,7 @@ def create_samples():
     np.save("c2", c2)
 
 
+    # basic RC circuit
     c3 = np.array([
         [
             Capacitor(100, v_init=12),
@@ -53,3 +56,19 @@ def create_samples():
         ]
     ])
     np.save("c3", c3)
+
+
+    # charging a capacitor
+    c4 = np.array([
+        [
+            Capacitor(100),
+            Resistor(1000),
+            Battery(12)
+        ],
+        [
+            Wire(0, 1),
+            Wire(1, 2),
+            Wire(2, 0)
+        ]
+    ])
+    np.save("c4", c4)
