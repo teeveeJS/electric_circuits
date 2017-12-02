@@ -165,7 +165,7 @@ class Circuit:
         # set up the matrices
         m_size = self.lenv - 1
         A = np.zeros((m_size, m_size))
-        b = np.zeros(m_size)
+        b = np.zeros((m_size, 1))
 
         # loop through all the nodes and components to fill the matrices
         # fill in the currents
@@ -185,7 +185,7 @@ class Circuit:
                     b[i] = comp.emf
                     v_drop = 1.
                 elif type(comp) in [Resistor, Light_Bulb]:
-                    b[i] = 0.
+                    # b[i] = 0.
                     A[i, i] = comp.res
 
 
@@ -196,7 +196,10 @@ class Circuit:
                 if not(isinstance(self.vertices[c2], Junction) and self.vertices[c2].is_ground):
                     A[i, c2] = 1. * v_drop
 
+
         x = solve(A, b)
+
+        # x = spsolve(A, b)
         # print(x)
 
         # equate values of x with the components
@@ -206,7 +209,6 @@ class Circuit:
                 comp.emf = x[i]
             else:
                 comp.curr = x[i]
-
                 # reverse current direction if necessary
                 # if comp.curr < 0:
                 #     comp.curr *= -1
@@ -269,6 +271,9 @@ class Circuit:
         for c in self.vertices:
             if type(c) in comps:
                 plt.plot(self.t_hist, [c.v_hist, c.i_hist, c.q_hist][viq])
+
+        plt.xlabel("Time (s)")
+        plt.ylabel(["Voltage (V)", "Current (I)", "Charge (Q)"][viq])
         plt.show()
 
     def update_comp_cxns(self):

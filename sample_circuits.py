@@ -72,3 +72,56 @@ def create_samples():
         ]
     ])
     np.save("c4", c4)
+
+
+    """circuits that don't work"""
+    # two circuits
+    c5 = np.array([
+        [
+            DC_Battery(12),
+            Resistor(5),
+            DC_Battery(12),
+            Resistor(5)
+        ],
+        [
+            Wire(0, 1),
+            Wire(1, 0),
+            Wire(2, 3),
+            Wire(3, 2)
+        ]
+    ])
+    np.save("c5", c5)
+
+
+    # invalid loop within a circuit
+    c6 = np.array([
+        [
+            DC_Battery(12),
+            Resistor(5),
+            Junction(),
+            Junction(),
+            Resistor(3),
+            Resistor(4)
+        ],
+        [
+            Wire(0, 1),
+            Wire(0, 2),
+            Wire(1, 2),
+            Wire(2, 3),
+            Wire(3, 4),
+            Wire(3, 5),
+            Wire(4, 5)
+        ]
+    ])
+    np.save("c6", c6)
+
+
+    # zero-resistance circuit
+    # c7 = np.array([
+    #     [
+    #
+    #     ],
+    #     [
+    #
+    #     ]
+    # ])
