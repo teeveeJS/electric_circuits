@@ -45,9 +45,7 @@ if num_comps == 1:
     print("pls be nice i'm not gonna error check")
     file_name = input("Enter file name.\n>>").strip()
     create_samples(file_name)
-    comps, wires = np.load(file_name + ".npy")
-
-    circ = Circuit(comps, wires)
+    circ = Circuit(*np.load(file_name + ".npy"))
 
     print('done')
     sys.exit()

@@ -65,7 +65,7 @@ def create_samples(data_key):
             ]
         ]),
 
-        """Circuit failures"""
+        # Circuit failures
         # two disjoint circuit
         "c5": np.array([
             [
@@ -102,20 +102,10 @@ def create_samples(data_key):
                 Wire(4, 5)
             ]
         ]),
-        # I suspect there is a way to construct a 0-resistance circuit
-        # have yet to device one
-        "c7": np.array([
-            [
 
-            ],
-            [
-
-            ]
-        ]),
-
-        """Other tests"""
+        #Other tests
         # two batteries with opposing ends
-        "c8": np.array([
+        "c7": np.array([
             [
                 DC_Battery(12),
                 DC_Battery(9),
@@ -128,8 +118,8 @@ def create_samples(data_key):
             ]
         ]),
 
-        """time constant/numerical integration failures"""
-        "c9": np.array([
+        # time constant/numerical integration failures
+        "c8": np.array([
             [
                 DC_Battery(100),
                 Resistor(500),
@@ -142,7 +132,7 @@ def create_samples(data_key):
             ]
         ]),
 
-        "c10": np.array([
+        "c9": np.array([
             [
                 DC_Battery(100),
                 Resistor(5),
@@ -152,6 +142,20 @@ def create_samples(data_key):
                 Wire(0, 1),
                 Wire(1, 2),
                 Wire(2, 0)
+            ]
+        ]),
+
+        # two capacitors
+        "c10": np.array([
+            [
+                Capacitor(100, v_init=3),
+                Capacitor(200, v_init=12),
+                Resistor(2000)
+            ],
+            [
+                Wire(0, 1),
+                Wire(1, 2),
+                Wire(0, 2)
             ]
         ])
     }
