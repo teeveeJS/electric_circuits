@@ -37,7 +37,7 @@ class Circuit:
             for _ in range(self.num_steps):
                 self.run()
 
-            self.print_circuit_data(ignore=[])
+            self.print_circuit_data()
             self.graph_circuit_data()
             # self.graph_circuit_data([DC_Battery], 1)
 

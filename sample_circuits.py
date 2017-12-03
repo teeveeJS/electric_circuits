@@ -190,6 +190,36 @@ def create_samples(data_key):
                 Wire(1, 2),
                 Wire(2, 0)
             ]
+        ]),
+    
+        # wheatstone bridge
+        "c13": np.array([
+            [
+                DC_Battery(100),
+                Junction(),
+                Resistor(20),
+                Resistor(40),
+                Resistor(30),
+                Resistor(60),
+                Junction(),
+                Junction(),
+                Multimeter(Meter_Type.VOLTMETER),
+                Junction()
+            ],
+            [
+                Wire(0, 1),
+                Wire(1, 2),
+                Wire(1, 4),
+                Wire(2, 6),
+                Wire(6, 3),
+                Wire(6, 8),
+                Wire(4, 7),
+                Wire(7, 8),
+                Wire(7, 5),
+                Wire(3, 9),
+                Wire(5, 9),
+                Wire(9, 0)
+            ]
         ])
     }
 
