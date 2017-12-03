@@ -87,16 +87,21 @@ class Switch(Component):
 
 
 class Meter_Type(Enum):
-    AMMETER = 0
-    VOLTMETER = 1
-    OHMMETER = 2
+    AMMETER = "A"
+    VOLTMETER = "V"
+    OHMMETER = "Ohms"
 
 
 class Multimeter(Component):
     def __init__(self, meter_type=Meter_Type.VOLTMETER):
-        super().__init__(0, 0, 0)
+        if meter_type == Meter_Type.VOLTMETER:
+            R = 1e+10 # voltmeters have "infinite" resistance
+        else:
+            R = 0
+        super().__init__(0, 0, R)
         self.meter_type = meter_type
         self.reading = -1.
+        self.reading_hist = np.array([])
 
     def calc_reading(self, Circuit):
         """
@@ -106,10 +111,17 @@ class Multimeter(Component):
         * voltage: total voltage drop of the components in between the two ends
         * resistance: the equivalent resistance of the components in between
         """
+        if self.meter_type == Meter_Type.VOLTMETER:
+            self.reading = np.fabs(Circuit.vertices[self.cxns[0]].emf \
+                                   - Circuit.vertices[self.cxns[1]].emf)
+        elif self.meter_type == Meter_Type.AMMETER:
+            self.reading = self.curr
+        elif self.meter_type == Meter_Type.OHMMETER:
+            pass
 
-        # will be very easy to implement once the matrix stuff is done
-
-        return
+        print(str(self.reading) + str(self.meter_type.value))
+        self.reading_hist = np.append(self.reading_hist, self.reading)
+        return self.reading
 
 
 class DC_Battery(Component):

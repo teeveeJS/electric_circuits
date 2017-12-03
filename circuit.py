@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import solve
-import scipy as sc
-from scipy.sparse.linalg import spsolve
+# import scipy as sc
+# from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 from components import *
 from algorithms import backtracker
@@ -17,21 +17,27 @@ class Circuit:
 
         self.t_step = dt
         self.num_steps = n
-        self.t_hist = np.linspace(0.0, self.t_step*self.num_steps, self.num_steps)
 
-        self.update_comp_cxns()
+        self.update_comp_cxns() # necessary when loading from file
 
         if self.validate():
+            
+            if not self.contains([Capacitor]):
+                self.t_step = 0
+                self.num_steps = 1
+                self.t_hist = np.array([1])
+            else:
+                self.t_hist = np.linspace(0.0, self.t_step*self.num_steps, self.num_steps)
 
             self.add_nulls()
             self.add_junctions()
 
-            self.print_circuit_data()
+            self.print_circuit_data(ignore=[])
 
             for _ in range(self.num_steps):
                 self.run()
 
-            self.print_circuit_data()
+            self.print_circuit_data(ignore=[])
             self.graph_circuit_data()
             # self.graph_circuit_data([DC_Battery], 1)
 
@@ -161,7 +167,7 @@ class Circuit:
                 if type(comp) in [DC_Battery, Capacitor]:
                     b[i] = comp.emf
                     v_drop = 1.
-                elif type(comp) in [Resistor, Light_Bulb]:
+                elif type(comp) in [Resistor, Light_Bulb, Multimeter]:
                     A[i, i] = comp.res
 
                 c1 = comp.cxns[0]
@@ -174,7 +180,7 @@ class Circuit:
 
         x = solve(A, b)
 
-        # x = spsolve(A, b)
+        # x = spsolve(A, b) #scipy sparse matrix solver
         # print(x)
 
         # equate values of x with the components
@@ -205,8 +211,18 @@ class Circuit:
 
             comp.v_hist = np.append(comp.v_hist, comp.emf)
 
+        # update multimeter readings
+        for c in self.vertices:
+            if isinstance(c, Multimeter):
+                c.calc_reading(self)
 
         return 0
+    
+    def contains(self, types):
+        for c in self.vertices:
+            if type(c) in types:
+                return True
+        return False
 
     def connects_to(self, wire, comp_type):
         return isinstance(self.vertices[wire.start], comp_type) or \

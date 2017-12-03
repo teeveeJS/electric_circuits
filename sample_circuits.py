@@ -22,8 +22,8 @@ def create_samples(data_key):
                 Junction(),
                 Junction(),
                 Resistor(50),
-                Resistor(50),
-                Resistor(50),
+                Resistor(40),
+                Resistor(20),
                 Junction(),
                 Junction()
             ],
@@ -156,6 +156,39 @@ def create_samples(data_key):
                 Wire(0, 1),
                 Wire(1, 2),
                 Wire(0, 2)
+            ]
+        ]),
+
+        # Voltmeter
+        "c11": np.array([
+            [
+                DC_Battery(12),
+                Multimeter(),
+                Resistor(5),
+                Junction(),
+                Junction()
+            ],
+            [
+                Wire(0, 3),
+                Wire(3, 1),
+                Wire(3, 2),
+                Wire(2, 4),
+                Wire(1, 4),
+                Wire(4, 0)
+            ]
+        ]),
+    
+        # Ammeter
+        "c12": np.array([
+            [
+                DC_Battery(12),
+                Multimeter(Meter_Type.AMMETER),
+                Resistor(5)
+            ],
+            [
+                Wire(0, 1),
+                Wire(1, 2),
+                Wire(2, 0)
             ]
         ])
     }
