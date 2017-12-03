@@ -42,11 +42,10 @@ comp_data = {
 
 
 if num_comps == 1:
-    create_samples()
-
     print("pls be nice i'm not gonna error check")
-    file_name = input("Enter file name.\n>>").strip() + ".npy"
-    comps, wires = np.load(file_name)
+    file_name = input("Enter file name.\n>>").strip()
+    create_samples(file_name)
+    comps, wires = np.load(file_name + ".npy")
 
     circ = Circuit(comps, wires)
 
