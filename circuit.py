@@ -11,20 +11,18 @@ class Circuit:
     Graph consisting of Vertices and Edges G(V, E)
     Vertices are Components and Edges are Wires
     """
-    def __init__(self, V, E):
-        self.__vertices = V
-        self.__edges = E
+    def __init__(self, V, E, dt=0.01, n=100):
+        self.vertices = V
+        self.edges = E
 
-        self.t_step = 0.01
-        self.num_steps = 100
+        self.t_step = dt
+        self.num_steps = n
         self.t_hist = np.linspace(0.0, self.t_step*self.num_steps, self.num_steps)
 
         self.update_comp_cxns()
 
         if self.validate():
 
-            # this has to be called first so that the ground node is the last element
-            # in self.vertices
             self.add_nulls()
             self.add_junctions()
 
@@ -35,28 +33,7 @@ class Circuit:
 
             self.print_circuit_data()
             self.graph_circuit_data()
-
-    def vertices():
-        doc = "Vertices (components) of the Circuit: an array of Components"
-        def fget(self):
-            return self.__vertices
-        def fset(self, value):
-            self.__vertices = value
-        def fdel(self):
-            del self.__vertices
-        return locals()
-    vertices = property(**vertices())
-
-    def edges():
-        doc = "Edges (connections) of the Circuit: an array of Wires"
-        def fget(self):
-            return self.__edges
-        def fset(self, value):
-            self.__edges = value
-        def fdel(self):
-            del self.__edges
-        return locals()
-    edges = property(**edges())
+            # self.graph_circuit_data([DC_Battery], 1)
 
     @property
     def lenv(self):
@@ -66,6 +43,15 @@ class Circuit:
     def edge_tuples(self):
         """Reformats the edges for ease-of-use with some algorithms"""
         return list(map(lambda e: e.pair, self.edges))
+
+    def add_component(self, c, wire, args=[]):
+        # create the new component
+        new_comp = c(*args)
+        new_comp.add_connection(wire.start)
+        new_comp.add_connection(wire.end)
+        self.vertices = np.append(self.vertices, new_comp)
+
+        self.split_wire(wire, self.lenv-1)
 
     def split_wire(self, wire, new_conn):
         # configure the old components' connections
@@ -87,25 +73,19 @@ class Circuit:
         start_len = len(self.edges)
         for w in self.edges[start_len::-1]:
             if not self.connects_to(w, Junction):
-                # create the new component
-                i_new = self.lenv
-                new_junction = Junction(2)
-                new_junction.add_connection(w.start)
-                new_junction.add_connection(w.end)
-
-                # print('adding junction', i_new, w.start, w.end)
-                self.vertices = np.append(self.vertices, new_junction)
-
-                self.split_wire(w, i_new)
+                self.add_component(Junction, w, [2])
 
         # make the last Junction into a Ground node
-        self.vertices[-1].is_ground = True
+        if isinstance(self.vertices[-1], Junction):
+            self.vertices[-1].is_ground = True
+        else:
+            self.add_ground()
 
+        # update components' connections to match the new wires
         self.update_comp_cxns()
 
-
-
-        self.print_circuit_data([], w=True)
+        # show the circuit with wires
+        # self.print_circuit_data([], w=True)
 
     def add_nulls(self):
         """Adds Null_Components to the Circuit so that no two Junctions are
@@ -113,15 +93,14 @@ class Circuit:
         for w in self.edges:
             if isinstance(self.vertices[w.start], Junction) and \
                isinstance(self.vertices[w.end], Junction):
-                i_new = self.lenv
-                new_null_comp = Null_Component()
-                new_null_comp.add_connection(w.start)
-                new_null_comp.add_connection(w.end)
-                self.vertices = np.append(self.vertices, new_null_comp)
-
-                self.split_wire(w, i_new)
+                self.add_component(Null_Component, w)
 
         self.update_comp_cxns()
+
+    def add_ground(self):
+        """add Ground junction to the Circuit. Currently very unoptimized :("""
+        self.add_component(Null_Component, self.edges[-1])
+        self.add_junctions()
 
     def validate(self):
         """
@@ -161,18 +140,16 @@ class Circuit:
 
         # self.print_circuit_data([], True)
 
-
         # set up the matrices
         m_size = self.lenv - 1
         A = np.zeros((m_size, m_size))
         b = np.zeros((m_size, 1))
 
         # loop through all the nodes and components to fill the matrices
-        # fill in the currents
-        # possible problem: what if there are junctions connected to each other?
         for i in range(m_size): # will go over every component except for the ground node
             comp = self.vertices[i]
             if isinstance(comp, Junction):
+                # fill in the currents
                 # current into element: -1
                 # current out of element: 1
                 for conn in comp.cxns:
@@ -185,9 +162,7 @@ class Circuit:
                     b[i] = comp.emf
                     v_drop = 1.
                 elif type(comp) in [Resistor, Light_Bulb]:
-                    # b[i] = 0.
                     A[i, i] = comp.res
-
 
                 c1 = comp.cxns[0]
                 c2 = comp.cxns[1]
@@ -209,20 +184,17 @@ class Circuit:
                 comp.emf = x[i]
             else:
                 comp.curr = x[i]
-                # reverse current direction if necessary
-                # if comp.curr < 0:
-                #     comp.curr *= -1
-                #     comp.cxns = comp.cxns[::-1]
+                comp.i_hist = np.append(comp.i_hist, x[i])
 
         # complete calculations
         for i in range(self.lenv):
             comp = self.vertices[i]
+
             if isinstance(comp, Junction):
                 for conn in comp.cxns:
                     comp.curr += self.vertices[conn].curr * self.get_curr_dir(i, conn)
+                comp.i_hist = np.append(comp.i_hist, comp.curr)
             elif isinstance(comp, Capacitor):
-                comp.v_hist = np.append(comp.v_hist, comp.emf)
-
                 # print(comp.emf, comp.curr)
 
                 comp.emf += comp.curr * self.t_step / comp.cpty
@@ -230,6 +202,9 @@ class Circuit:
                 comp.emf = comp.curr * comp.res
             else:
                 pass
+
+            comp.v_hist = np.append(comp.v_hist, comp.emf)
+
 
         return 0
 
@@ -252,7 +227,7 @@ class Circuit:
         for i in range(self.lenv):
             c = self.vertices[i]
             if not type(c) in ignore:
-                print(i, type(c), 'I:', c.curr, 'V:', c.emf)#, c.cxns)
+                print(i, type(c), 'I:', c.curr, 'V:', c.emf, 'R:', c.res)#, c.cxns)
 
         print("============")
 
@@ -260,20 +235,21 @@ class Circuit:
             for wire in self.edges:
                 print("[{0}, {1}]".format(wire.start, wire.end))
 
-    def graph_circuit_data(self, comps=[Capacitor], viq=0):
+    def graph_circuit_data(self, comps=[Capacitor], vir=0):
         """
         Graph data of certain components
         params:
             comps: list. types to graph
-            viq: int. Voltage (0), Current (1), Charge (2) [only for capacitors]
+            viq: int. Voltage (0), Current (1), Resistance (2)
         """
+        #TODO: Charge for Capacitors
         #TODO: make subplots
         for c in self.vertices:
             if type(c) in comps:
-                plt.plot(self.t_hist, [c.v_hist, c.i_hist, c.q_hist][viq])
+                plt.plot(self.t_hist, [c.v_hist, c.i_hist, c.r_hist][vir])
 
         plt.xlabel("Time (s)")
-        plt.ylabel(["Voltage (V)", "Current (I)", "Charge (Q)"][viq])
+        plt.ylabel(["Voltage (V)", "Current (I)", "Resistance ($\Omega$)"][vir])
         plt.show()
 
     def update_comp_cxns(self):

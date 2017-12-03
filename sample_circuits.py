@@ -2,6 +2,10 @@ from components import *
 
 
 def create_samples():
+    # TODO: only save the circuit that the user chooses
+    # parser?
+
+
     # a very simple circuit
     c1 = np.array([
         [
@@ -125,3 +129,20 @@ def create_samples():
     #
     #     ]
     # ])
+
+
+
+    # two batteries with opposing directions
+    c8 = np.array([
+        [
+            DC_Battery(12),
+            DC_Battery(9),
+            Resistor(50)
+        ],
+        [
+            Wire(1, 0),
+            Wire(1, 2),
+            Wire(0, 2)
+        ]
+    ])
+    np.save("c8", c8)
