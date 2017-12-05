@@ -177,7 +177,8 @@ class Circuit:
         b = np.zeros((m_size, 1))
 
         # loop through all the nodes and components to fill the matrices
-        for i in range(m_size): # will go over every component except for the ground node
+        # will go over every component except for the ground node
+        for i in range(m_size):
             comp = self.vertices[i]
             if isinstance(comp, Junction):
                 # fill in the currents
@@ -197,9 +198,11 @@ class Circuit:
 
                 c1 = comp.cxns[0]
                 c2 = comp.cxns[1]
-                if not (isinstance(self.vertices[c1], Junction) and self.vertices[c1].is_ground):
+                if not (isinstance(self.vertices[c1], Junction) and \
+                        self.vertices[c1].is_ground):
                     A[i, c1] = -1. * v_drop
-                if not(isinstance(self.vertices[c2], Junction) and self.vertices[c2].is_ground):
+                if not(isinstance(self.vertices[c2], Junction) and \
+                       self.vertices[c2].is_ground):
                     A[i, c2] = 1. * v_drop
 
 
@@ -212,10 +215,10 @@ class Circuit:
         for i in range(len(x)):
             comp = self.vertices[i]
             if isinstance(comp, Junction):
-                comp.emf = x[i]
+                comp.emf = x[i, 0]
             else:
-                comp.curr = x[i]
-                comp.i_hist = np.append(comp.i_hist, x[i])
+                comp.curr = x[i, 0]
+                comp.i_hist = np.append(comp.i_hist, x[i, 0])
 
         # complete calculations
         for i in range(self.lenv):
@@ -227,7 +230,7 @@ class Circuit:
                 comp.i_hist = np.append(comp.i_hist, comp.curr)
             elif isinstance(comp, Capacitor):
                 comp.emf += comp.curr * self.t_step / comp.cpty
-            elif type(comp) in [Resistor, Light_Bulb]:
+            elif type(comp) in [Resistor, Light_Bulb, Multimeter]:
                 comp.emf = comp.curr * comp.res
             else:
                 pass
@@ -294,7 +297,8 @@ class Circuit:
         for i in range(self.lenv):
             c = self.vertices[i]
             if not type(c) in ignore:
-                print(i, type(c), 'I:', c.curr, 'V:', c.emf, 'R:', c.res)#, c.cxns)
+                print("{0} {1} I: {2:0.3f} V: {3:0.3f} R: {4:0.1f}".format(i, \
+                     type(c), c.curr, c.emf, c.res))
 
         print("============")
 
@@ -311,6 +315,8 @@ class Circuit:
         """
         #TODO: Charge for Capacitors
         #TODO: make subplots
+        if not self.contains(comps):
+            return 1 # nothing to graph
         for c in self.vertices:
             if type(c) in comps:
                 plt.plot(self.t_hist, [c.v_hist, c.i_hist, c.r_hist][vir])
@@ -318,6 +324,7 @@ class Circuit:
         plt.xlabel("Time (s)")
         plt.ylabel(["Voltage (V)", "Current (I)", "Resistance ($\Omega$)"][vir])
         plt.show()
+        return 0
 
     def update_comp_cxns(self):
         for i in range(self.lenv):

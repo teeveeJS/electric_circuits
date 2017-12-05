@@ -5,6 +5,23 @@ from sample_circuits import create_samples
 import sys
 import numpy as np
 
+
+def valid_file_name(s):
+    """Check if the input string follows the guidelines of a valid filename"""
+    disallowed = ["\'", "\"", "~", "#", "%", "&", "*", "{", "}", "\\", ":", \
+                  "<", ">", "?", "/", "|", ".", ",", ";"]
+    if len(s) == 0 or len(s) > 50:
+        return False
+    # prohibit hidden files. also takes care of _vti_
+    if s[0] == "_":
+        return False
+    for c in s:
+        if c in disallowed:
+            return False
+    # bunch of other checks that i'll ignore
+    return True
+
+
 num_comps = 0
 while not (1 <= num_comps < 21):
     print("Enter 1 to load Circuit from file")
@@ -13,8 +30,10 @@ while not (1 <= num_comps < 21):
 
 # The user has chosen to load circuit data from an external file
 if num_comps == 1:
-    # No error checking. Users: please be nice!
-    file_name = input("Enter file name.\n>>").strip()
+    file_name = ""
+    while not valid_file_name(file_name):
+        file_name = input("Enter file name.\n>>").strip()
+    
     create_samples(file_name)
     circ = Circuit(*np.load(file_name + ".npy"))
 
@@ -30,13 +49,13 @@ comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR", "MULTI_MET
 # A nice way to keep track of the data to be collected and to reinforce bounds
 comp_data = {
     "BATTERY": {
-        "lower_bound": [1e-03], #exclusive
-        "upper_bound": [100.], #inclusive
+        "lower_bound": [1e-03],
+        "upper_bound": [100.],
         "msg": ["voltage."],
         "comp": DC_Battery
     },
     "JUNCTION": {
-        "lower_bound": [2],
+        "lower_bound": [3],
         "upper_bound": [5],
         "msg": ["the number of connections."],
         "comp": Junction
@@ -48,7 +67,7 @@ comp_data = {
         "comp": Resistor
     },
     "CAPACITOR": {
-        "lower_bound": [1e-03, 1e-03],
+        "lower_bound": [1e-03, 0.],
         "upper_bound": [100., 100.],
         "msg": ["capacitance (microfarads).", "initial voltage."],
         "comp": Capacitor
@@ -82,7 +101,7 @@ for i in range(num_comps):
         args = []
         for j in range(len(elem["lower_bound"])):
             inp = -1
-            while not (elem["lower_bound"][j] < inp <= elem["upper_bound"][j]):
+            while not (elem["lower_bound"][j] <= inp <= elem["upper_bound"][j]):
                 inp = float(input("Please enter {0}\n>>".format(elem["msg"][j])))
             args.append(inp)
         comps[i] = elem["comp"](*args)
@@ -95,7 +114,7 @@ def show_components():
     print("==========")
 
     for i in range(len(comps)):
-        print(i, comps[i])
+        print(i, type(comps[i]))
 
 
 def show_wires():
@@ -113,7 +132,6 @@ def show_wires():
 def is_complete():
     """checks completeness of the template-circuit based on wires"""
     # each component must have at least two connections
-    # NOTE: the template-circuit doesn't contain Junctions at this point
 
     for i in range(len(comps)):
         if len((np.where(np.array([wires]) == i))[0]) < 2:
@@ -136,7 +154,7 @@ def is_conn_valid(c1, c2):
     if not (0 <= c1 < len(comps) and 0 <= c2 < len(comps)):
         return False
 
-    if subsetof([[c1, c2]], wires):
+    if subsetof([[c1, c2]], wires): # Wire(c1, c2) in wires
         if len(comps) != 2:
             return False
         else:
@@ -158,7 +176,7 @@ while not is_complete():
 
     comps[c1].add_connection(c2)
     comps[c2].add_connection(c1)
-    wires.append([c1, c2])
+    wires.append([c1, c2]) # wires.append(Wire(c1, c2))
 
 
 # Reformats wires
@@ -168,8 +186,9 @@ for i in range(len(wires)):
 
 
 if input("Would you like to save the circuit?\n>>").strip() == "y":
-    # No error checking, user: please be nice
-    c_name = input("Enter file name without extension\n>>").strip()
+    c_name = ""
+    while not valid_file_name(c_name):
+        c_name = input("Enter file name without extension\n>>").strip()
     np.save(c_name, np.array([comps, wires]))
 
 # Creates the actual circuit and starts all the calculations

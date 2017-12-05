@@ -124,14 +124,13 @@ class Multimeter(Component):
         * resistance: the equivalent resistance of the components in between
         """
         if self.meter_type == Meter_Type.VOLTMETER:
-            self.reading = np.fabs(Circuit.vertices[self.cxns[0]].emf \
-                                   - Circuit.vertices[self.cxns[1]].emf)
+            self.reading = self.emf
         elif self.meter_type == Meter_Type.AMMETER:
             self.reading = self.curr
         elif self.meter_type == Meter_Type.OHMMETER:
             pass #TODO
 
-        print(str(self.reading) + str(self.meter_type.value))
+        print("Multimeter: {0:0.2f} {1}".format(self.reading, self.meter_type.value))
         self.reading_hist = np.append(self.reading_hist, self.reading)
         return self.reading
 
@@ -171,20 +170,16 @@ class Light_Bulb(Resistor):
 class Capacitor(Component):
     """
     Parallel-plate capacitor
-    A: area of the plate
-    C: capacitance
-    d: distance of separation between the plates
-    V: voltage across the parallel plates
-    Q: charge of the capacitor
+    cpty: capacitance
+    chg: charge of the capacitor
     kappa: the dielectric constant (1 in vacuum)
-    epsilon: permittivity of the dielectric = vacuum permittivity * kappa
     """
-    # should be initialized through capacitance (in microfarads)
-    # A, d, kappa, epsilon don't really matter (kappa at most)
-    def __init__(self, C, kappa=1, v_init=0): #A, d=0.01, kappa=1):
+    def __init__(self, C, v_init=0, kappa=1):
+        # set a bound on the capacitor's initial voltage
+        if v_init < 1e-02:
+            v_init = 0
         super().__init__(v_init, 0, 0)
-        # self.epsilon = kappa * 8.854e-12
-        self.cpty = C * 1e-06 #self.epsilon * A / d
+        self.cpty = C * 1e-06
         self.chg = self.cpty * self.emf
         self.kappa = kappa
 
@@ -197,5 +192,6 @@ class Inductor(Component):
     L: inductance
     """
     def __init__(self, L):
+        # L given in microhenries
         super().__init__(0, 0, 0) #TODO: has either v_init or i_init (maybe r_init?)
-        self.L = L
+        self.L = L * 1e-06

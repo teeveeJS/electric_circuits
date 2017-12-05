@@ -222,5 +222,10 @@ def create_samples(data_key):
             ]
         ])
     }
-
-    np.save(data_key, data[data_key]) #could actually just return the array
+    
+    if data_key in data.keys():
+        np.save(data_key, data[data_key])
+        #could actually just return the array
+        return 0
+    else:
+        return 1

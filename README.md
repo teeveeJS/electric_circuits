@@ -16,7 +16,7 @@ In terms of code, the program will use:
 ## Usage
 To start, run
 `python main.py`
-You can choose between loading a pre-existing circuit or manually entering the circuit data by either entering 1 or the number of components in your desired circuit, respecitvely. The pre-existing files have names c1 through c10.
+You can choose between loading a pre-existing circuit or manually entering the circuit data by either entering 1 or the number of components in your desired circuit, respecitvely. The pre-existing files have names c1 through c13.
 ~~~~
 Enter 1 to load Circuit from file
 How many components will the circuit contain?

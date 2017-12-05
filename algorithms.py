@@ -59,24 +59,30 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
         return -1
 
     next_node = None
+    least_res = np.inf
     # loop through all the available edges
     for e in available_edges:
         # TODO: prioritize the path of least resistance instead of just taking
-        # available edge that connects to current_node
-        if e[0] == current_node: #bitwise stuff might be better
-            next_node = e[1]
-        elif e[1] == current_node:
-            next_node = e[0]
+        # available edge that connects to current_node.
+        if current_node in e:
+            opposite_e = e[~e.index(current_node)+2]
+            if Graph.vertices[opposite_e].res < least_res:
+                next_node = opposite_e
+                least_res = Graph.vertices[opposite_e].res
+                
+                if least_res == 0:
+                    # no need to keep looking further
+                    break
         
-        if next_node != None:
-            visited_nodes.append(current_node)
-            total_res += Graph.vertices[current_node].res
-            available_edges.pop(available_edges.index(e))
-            return backtracker(Graph, target, next_node, visited_nodes, available_edges)
+    if next_node != None:
+        visited_nodes.append(current_node)
+        total_res += Graph.vertices[current_node].res
+        available_edges.pop(available_edges.index(e))
+        return backtracker(Graph, target, next_node, visited_nodes, available_edges)
 
     # No viable next node found; have to backtrack
     next_node = visited_nodes[-2]
-    print('backtracking to', next_node)
+    print("backtracking to", next_node)
     # Subtract the cost of the next node so that it is not double added
     total_res -= Graph.vertices[next_node].res
     # TODO: could return an array instead and compute cost from that
