@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.linalg import solve
 # import scipy as sc
-# from scipy.sparse.linalg import spsolve
+# from scipy.sparse.linalg import spsolve TODO
 import matplotlib.pyplot as plt
 from components import *
 from algorithms import backtracker
@@ -9,9 +9,17 @@ from algorithms import backtracker
 class Circuit:
     """
     Graph consisting of Vertices and Edges G(V, E)
-    Vertices are Components and Edges are Wires
+    Vertices are Components and Edges are Wires.
+    This is the class that takes care of all the calculations and simulation
     """
     def __init__(self, V, E, dt=0.01, n=100):
+        """
+        params:
+            V: list or array of Components
+            E: list or array of Wires
+            dt: time step of simulation
+            n: number of steps for the simulation
+        """
         self.vertices = V
         self.edges = E
 
@@ -21,14 +29,18 @@ class Circuit:
         self.update_comp_cxns() # necessary when loading from file
 
         if self.validate():
+            # If the circuit is valid, then run all the calculations
             
             if not self.contains([Capacitor]):
+                # Simulation won't be necessary when the circuit doesn't contain
+                # a capacitor
                 self.t_step = 0
                 self.num_steps = 1
                 self.t_hist = np.array([1])
             else:
                 self.t_hist = np.linspace(0.0, self.t_step*self.num_steps, self.num_steps)
 
+            # Add components that are necessary for functionality
             self.add_nulls()
             self.add_junctions()
 
@@ -51,6 +63,14 @@ class Circuit:
         return list(map(lambda e: e.pair, self.edges))
 
     def add_component(self, c, wire, args=[]):
+        """
+        Adds a component to the Circuit at a given point.
+        params:
+            c: class. type of the component to be created
+            wire: class Wire object in between which the component is to be
+                added.
+            args: optional. additional arguments required for the creation of c
+        """
         # create the new component
         new_comp = c(*args)
         new_comp.add_connection(wire.start)
@@ -60,6 +80,12 @@ class Circuit:
         self.split_wire(wire, self.lenv-1)
 
     def split_wire(self, wire, new_conn):
+        """
+        Splits a wire to reformat connections. Makes it easier to add components
+        params:
+            wire: class Wire object to be split
+            new_conn: int. index of the component that is to be added in between.
+        """
         # configure the old components' connections
         self.vertices[wire.start].change_connection(wire.end, new_conn)
         self.vertices[wire.end].change_connection(wire.start, new_conn)
@@ -114,7 +140,6 @@ class Circuit:
         Criteria for a valid circuit:
         * at least one closed loop with:
             * non-zero resistance
-                * greedy to check this
             * at least one source of emf
                 * doesn't have be a battery: could be a capacitor or an inductor
         * recursive backtracking that there is a closed loop around the emf source
@@ -129,7 +154,7 @@ class Circuit:
             * If not found, the circuit is not valid
         """
         for i in range(self.lenv):
-            # add isinstance(comp, Inductor)
+            # add isinstance(comp, Inductor) TODO
             comp = self.vertices[i]
             if isinstance(comp, DC_Battery) or isinstance(comp, Capacitor):
                 if backtracker(self, i, i, [], self.edge_tuples) > 0:
@@ -142,7 +167,7 @@ class Circuit:
         return False # circuit is not valid
 
     def run(self):
-        # this is where all the nodal analysis will take place
+        """This is where all the nodal analysis takes place"""
 
         # self.print_circuit_data([], True)
 
@@ -195,14 +220,12 @@ class Circuit:
         # complete calculations
         for i in range(self.lenv):
             comp = self.vertices[i]
-
+            
             if isinstance(comp, Junction):
                 for conn in comp.cxns:
                     comp.curr += self.vertices[conn].curr * self.get_curr_dir(i, conn)
                 comp.i_hist = np.append(comp.i_hist, comp.curr)
             elif isinstance(comp, Capacitor):
-                # print(comp.emf, comp.curr)
-
                 comp.emf += comp.curr * self.t_step / comp.cpty
             elif type(comp) in [Resistor, Light_Bulb]:
                 comp.emf = comp.curr * comp.res
@@ -212,6 +235,8 @@ class Circuit:
             comp.v_hist = np.append(comp.v_hist, comp.emf)
 
         # update multimeter readings
+        # this must be done after the previous for loop to guarantee that
+        # every component has all of its values
         for c in self.vertices:
             if isinstance(c, Multimeter):
                 c.calc_reading(self)
@@ -219,24 +244,50 @@ class Circuit:
         return 0
     
     def contains(self, types):
+        """
+        Checks if a circuit contains specific components
+        params:
+            types: list. types of components to be checked for
+        """
         for c in self.vertices:
             if type(c) in types:
                 return True
         return False
 
     def connects_to(self, wire, comp_type):
+        """
+        Checks if a wire connects to a specific component type
+        params:
+            wire: class Wire object. the wire whose connectivity is to be checked
+            comp_type: type of the component of interest.
+        """
         return isinstance(self.vertices[wire.start], comp_type) or \
                isinstance(self.vertices[wire.end], comp_type)
 
     def get_curr_dir(self, node_name, comp_name):
+        """
+        Returns the direction of current between two components
+        params:
+            node_name: int. the index of the component whose directions are
+                being considered.
+            comp_name: int. the direction of current is measured with respect to
+        return:
+            int. the direction of current. -1: into component. 1: out of component
+        """
         if self.vertices[comp_name].cxns[0] == node_name:
            return 1
         elif self.vertices[comp_name].cxns[1] == node_name:
            return -1
-        else:
+        else: # just in case
            raise ValueError("Components not connected")
 
     def print_circuit_data(self, ignore=[Junction, Null_Component], w=False):
+        """
+        Prints specified data of the circuit
+        params:
+            ignore: list of component types not to be printed
+            w: bool. whether the wires will be printed
+        """
         print("============")
         print("Circuit Data")
         print("============")

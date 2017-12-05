@@ -10,39 +10,10 @@ while not (1 <= num_comps < 21):
     print("Enter 1 to load Circuit from file")
     num_comps = int(input("How many components will the circuit contain?\n>>"))
 
-comps = []
-wires = []
-comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR"]
-comp_data = {
-    "BATTERY": {
-        "lower_bound": 1e-03, #exclusive
-        "upper_bound": 100., #inclusive
-        "msg": "voltage.",
-        "comp": DC_Battery
-    },
-    "JUNCTION": {
-        "lower_bound": 2,
-        "upper_bound": 5,
-        "msg": "the number of connections.",
-        "comp": Junction
-    },
-    "RESISTOR": {
-        "lower_bound": 1e-03,
-        "upper_bound": 1000.,
-        "msg": "resistance.",
-        "comp": Resistor
-    },
-    "CAPACITOR": {
-        "lower_bound": 1e-03,
-        "upper_bound": 100.,
-        "msg": "capacitance (microfarads).",
-        "comp": Capacitor
-    }
-}
 
-
+# The user has chosen to load circuit data from an external file
 if num_comps == 1:
-    print("pls be nice i'm not gonna error check")
+    # No error checking. Users: please be nice!
     file_name = input("Enter file name.\n>>").strip()
     create_samples(file_name)
     circ = Circuit(*np.load(file_name + ".npy"))
@@ -51,29 +22,74 @@ if num_comps == 1:
     sys.exit()
 
 
+# The component and wire lists to be filled by the user
+comps = []
+wires = []
+# All the components available to the user
+comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR", "MULTI_METER"]
+# A nice way to keep track of the data to be collected and to reinforce bounds
+comp_data = {
+    "BATTERY": {
+        "lower_bound": [1e-03], #exclusive
+        "upper_bound": [100.], #inclusive
+        "msg": ["voltage."],
+        "comp": DC_Battery
+    },
+    "JUNCTION": {
+        "lower_bound": [2],
+        "upper_bound": [5],
+        "msg": ["the number of connections."],
+        "comp": Junction
+    },
+    "RESISTOR": {
+        "lower_bound": [1e-03],
+        "upper_bound": [1000.],
+        "msg": ["resistance."],
+        "comp": Resistor
+    },
+    "CAPACITOR": {
+        "lower_bound": [1e-03, 1e-03],
+        "upper_bound": [100., 100.],
+        "msg": ["capacitance (microfarads).", "initial voltage."],
+        "comp": Capacitor
+    },
+    "BULB": {
+        "lower_bound": [1e-03, 1.],
+        "upper_bound": [1000., 100.],
+        "msg": ["resistance.", "wattage."],
+        "comp": Light_Bulb
+    }
+}
+
+
+# Gather all the data for the components
 for i in range(num_comps):
     comps.append(0)
     comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
     while not comps[i] in comp_names:
-        comps[i] = input(" | ".join(comp_data.keys()) + " | BULB\n>>").upper()
+        comps[i] = input(" | ".join(comp_data.keys()) + " | MULTI_METER\n>>").upper()
 
-    if comps[i] == "BULB":
-        r = 0
-        while not (1e-03 < r <= 1000.):
-            r = float(input('Please enter resistance.\n>>'))
-        w = 0
-        while not (1. < w <= 100.):
-            w = float(input('Please enter wattage.\n>>'))
-        comps[i] = Light_Bulb(r, w)
+    if comps[i] == "MULTI_METER":
+        t = None
+        while t != "VOLTMETER" or t != "AMMETER":
+            t = input("Please enter meter type: VOLTMETER | AMMETER.\n>>").upper()
+        if t == "AMMETER":
+            comps[i] = Multimeter(Meter_Type.AMMETER)
+        else:
+            comps[i] = Multimeter()
     else:
         elem = comp_data[comps[i]]
-        inp = 0
-        while not (elem["lower_bound"] < inp <= elem["upper_bound"]):
-            inp = float(input("Please enter {0}\n>>".format(elem["msg"])))
-        comps[i] = elem["comp"](inp)
+        args = []
+        for j in range(len(elem["lower_bound"])):
+            inp = -1
+            while not (elem["lower_bound"][j] < inp <= elem["upper_bound"][j]):
+                inp = float(input("Please enter {0}\n>>".format(elem["msg"][j])))
+            args.append(inp)
+        comps[i] = elem["comp"](*args)
 
 
 def show_components():
+    """Prints the components so that the user can easier create the connections"""
     print("==========")
     print("COMPONENTS")
     print("==========")
@@ -83,6 +99,7 @@ def show_components():
 
 
 def show_wires():
+    """Prints the current wires the user has created"""
     print("\n==========")
     print("WIRES")
     print("==========")
@@ -129,7 +146,7 @@ def is_conn_valid(c1, c2):
 
 
 while not is_complete():
-
+    """The circuit is not complete so the user must keep adding wires to the circuit"""
     c1, c2 = -2, -2 # just some initial states
     while not is_conn_valid(c1, c2):
         show_components()
@@ -144,18 +161,18 @@ while not is_complete():
     wires.append([c1, c2])
 
 
-# reformats wires
+# Reformats wires
 #TODO: get rid of this. i.e. directly append Wires
 for i in range(len(wires)):
     wires[i] = Wire(wires[i][0], wires[i][1])
 
 
 if input("Would you like to save the circuit?\n>>").strip() == "y":
-    print("again, pls be nice..")
+    # No error checking, user: please be nice
     c_name = input("Enter file name without extension\n>>").strip()
     np.save(c_name, np.array([comps, wires]))
 
-
+# Creates the actual circuit and starts all the calculations
 circ = Circuit(comps, wires)
 
 print('done')

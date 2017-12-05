@@ -1,3 +1,4 @@
+import numpy as np
 from components import *
 
 
@@ -131,7 +132,6 @@ def create_samples(data_key):
                 Wire(2, 0)
             ]
         ]),
-
         "c9": np.array([
             [
                 DC_Battery(100),
