@@ -30,7 +30,7 @@ class Circuit:
 
         if self.validate():
             # If the circuit is valid, then run all the calculations
-            
+
             if not self.contains([Capacitor]):
                 # Simulation won't be necessary when the circuit doesn't contain
                 # a capacitor
@@ -44,7 +44,7 @@ class Circuit:
             self.add_nulls()
             self.add_junctions()
 
-            self.print_circuit_data(ignore=[])
+            # self.print_circuit_data(ignore=[])
 
             for _ in range(self.num_steps):
                 self.run()
@@ -223,7 +223,7 @@ class Circuit:
         # complete calculations
         for i in range(self.lenv):
             comp = self.vertices[i]
-            
+
             if isinstance(comp, Junction):
                 for conn in comp.cxns:
                     comp.curr += self.vertices[conn].curr * self.get_curr_dir(i, conn)
@@ -245,7 +245,7 @@ class Circuit:
                 c.calc_reading(self)
 
         return 0
-    
+
     def contains(self, types):
         """
         Checks if a circuit contains specific components
