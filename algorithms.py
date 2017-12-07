@@ -41,6 +41,7 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
     """
 
     # print(visited_nodes, available_edges, [[target, current_node]])
+    print(visited_nodes, current_node)
 
     global total_res
     if subsetof([[target, current_node]], available_edges):
@@ -59,6 +60,7 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
         return -1
 
     next_node = None
+    current_edge = None
     least_res = np.inf
     # loop through all the available edges
     for e in available_edges:
@@ -68,20 +70,21 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
             opposite_e = e[~e.index(current_node)+2]
             if Graph.vertices[opposite_e].res < least_res:
                 next_node = opposite_e
+                current_edge = e
                 least_res = Graph.vertices[opposite_e].res
-                
+
                 if least_res == 0:
                     # no need to keep looking further
                     break
-        
+
     if next_node != None:
         visited_nodes.append(current_node)
         total_res += Graph.vertices[current_node].res
-        available_edges.pop(available_edges.index(e))
+        available_edges.pop(available_edges.index(current_edge))
         return backtracker(Graph, target, next_node, visited_nodes, available_edges)
 
     # No viable next node found; have to backtrack
-    next_node = visited_nodes[-2]
+    next_node = visited_nodes[-1]
     print("backtracking to", next_node)
     # Subtract the cost of the next node so that it is not double added
     total_res -= Graph.vertices[next_node].res
