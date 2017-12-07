@@ -44,13 +44,16 @@ if num_comps == 1:
 # The component and wire lists to be filled by the user
 comps = []
 wires = []
+# The values used in graphing when the circuit contains capacitors
+dt = 0
+n = 1
 # All the components available to the user
 comp_names = ["BATTERY", "JUNCTION", "RESISTOR", "BULB", "CAPACITOR", "MULTI_METER"]
 # A nice way to keep track of the data to be collected and to reinforce bounds
 comp_data = {
     "BATTERY": {
         "lower_bound": [1e-03],
-        "upper_bound": [100.],
+        "upper_bound": [1000.],
         "msg": ["voltage."],
         "comp": DC_Battery
     },
@@ -68,7 +71,7 @@ comp_data = {
     },
     "CAPACITOR": {
         "lower_bound": [1e-03, 0.],
-        "upper_bound": [100., 100.],
+        "upper_bound": [1000., 1000.],
         "msg": ["capacitance (microfarads).", "initial voltage."],
         "comp": Capacitor
     },
@@ -180,18 +183,30 @@ while not is_complete():
 
 
 # Reformats wires
-#TODO: get rid of this. i.e. directly append Wires
+# TODO: get rid of this. i.e. directly append Wires
 for i in range(len(wires)):
     wires[i] = Wire(wires[i][0], wires[i][1])
 
+
+for c in comps:
+    if isinstance(c, Capacitor):
+        caution_msg = """\nPlease be advised that the values you are about to
+enter have significant influence over how the graphs will look. We
+recommend that the time increment be small and the number of steps be
+such that time increment * number of steps ~ 4 * R_equiv * C_equiv"""
+        print(caution_msg)
+        dt = float(input("Please enter the time increment.\n>>").strip())
+        n = int(input("Please enter the number of steps.\n>>").strip())
+        break        
+        
 
 if input("Would you like to save the circuit?\n>>").strip() == "y":
     c_name = ""
     while not valid_file_name(c_name):
         c_name = input("Enter file name without extension\n>>").strip()
-    np.save(c_name, np.array([comps, wires]))
+    np.save(c_name, np.array([comps, wires, dt, n]))
 
 # Creates the actual circuit and starts all the calculations
-circ = Circuit(comps, wires)
+circ = Circuit(comps, wires, dt, n)
 
 print('done')

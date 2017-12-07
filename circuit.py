@@ -237,12 +237,14 @@ class Circuit:
 
             comp.v_hist = np.append(comp.v_hist, comp.emf)
 
-        # update multimeter readings
+        # update multimeter readings and light bulb states
         # this must be done after the previous for loop to guarantee that
         # every component has all of its values
         for c in self.vertices:
             if isinstance(c, Multimeter):
                 c.calc_reading(self)
+            elif isinstance(c, Light_Bulb):
+                c.update_state()
 
         return 0
     

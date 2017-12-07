@@ -156,15 +156,20 @@ class Light_Bulb(Resistor):
     NOTE: better implementation when GUI
     """
     def __init__(self, R, W, state=State.OFF):
-        super().__init__(0, 0, R)
+        super().__init__(R)
         self.state = state
         self.wattage = W
 
     def update_state(self):
         if self.power == self.wattage:
             self.state = State.ON
+            # This will change when a GUI is implemented
+            self.print_state()
         else:
             self.state = State.OFF
+            
+    def print_state(self):
+        print("The light bulb is on with {0:0.1f} Watts".format(self.wattage))
 
 
 class Capacitor(Component):
