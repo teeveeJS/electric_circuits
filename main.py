@@ -1,6 +1,5 @@
 from components import *
 from circuit import Circuit
-from algorithms import subsetof
 from sample_circuits import create_samples
 import sys
 import numpy as np
@@ -90,9 +89,9 @@ for i in range(num_comps):
     comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
     while not comps[i] in comp_names:
         comps[i] = input(" | ".join(comp_data.keys()) + \
-                         " | MULTI_METER\n>>").upper()
+                         " | MULTIMETER\n>>").upper()
 
-    if comps[i] == "MULTI_METER":
+    if comps[i] == "MULTIMETER":
         t = None
         while not (t in ["VOLTMETER", "AMMETER"]):
             t = input("Please enter meter type: VOLTMETER | AMMETER.\n>>").strip().upper()
@@ -129,20 +128,15 @@ def show_components():
     if len(wires) == 0:
         print('No wires')
     else:
-        for j in range(len(wires)):
-            print("({0}, {1})".format(wires[j][0], wires[j][1]))
-
-    print('\n')
+        for w in wires:
+            print(w.pair)
 
 
 def is_complete():
     """checks completeness of the template-circuit based on wires"""
-    # each component must have at least two connections
-
-    for i in range(len(comps)):
-        if len((np.where(np.array([wires]) == i))[0]) < 2:
+    for c in comps:
+        if -1 in c.cxns:
             return False
-
     return True
 
 
@@ -160,7 +154,7 @@ def is_conn_valid(c1, c2):
     if not (0 <= c1 < len(comps) and 0 <= c2 < len(comps)):
         return False
 
-    if subsetof([[c1, c2]], wires): # Wire(c1, c2) in wires
+    if Wire(c1, c2) in wires:
         if len(comps) != 2:
             return False
         else:
@@ -180,13 +174,7 @@ while not is_complete():
 
     comps[c1].add_connection(c2)
     comps[c2].add_connection(c1)
-    wires.append([c1, c2]) # wires.append(Wire(c1, c2))
-
-
-# Reformats wires
-# TODO: get rid of this. i.e. directly append Wires
-for i in range(len(wires)):
-    wires[i] = Wire(wires[i][0], wires[i][1])
+    wires.append(Wire(c1, c2))
 
 
 for c in comps:

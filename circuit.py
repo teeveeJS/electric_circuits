@@ -287,17 +287,13 @@ class Circuit:
             c = self.vertices[i]
             if not type(c) in ignore:
                 print("{0} {1} I: {2:0.3f} V: {3:0.3f} R: {4:0.1f}".format(i, \
-                     type(c), c.curr, c.emf, c.res), c.cxns)
+                     type(c), c.curr, c.emf, c.res))
 
         print("============")
 
         if w:
             for wire in self.edges:
-                #print("[{0}, {1}]".format(wire.start, wire.end))
                 print(wire.pair)
-                
-            #for i in range(self.lenv):
-            #    print(i, self.vertices[i].cxns)
 
     def graph_circuit_data(self, comps=[Capacitor], vir=0):
         """
