@@ -45,6 +45,11 @@ class Circuit:
             self.add_junctions()
 
             # self.print_circuit_data(ignore=[])
+            
+            
+            self.update_comp_cxns()
+            
+            
 
             for _ in range(self.num_steps):
                 self.run()
@@ -130,9 +135,11 @@ class Circuit:
         self.update_comp_cxns()
 
     def add_ground(self):
-        """add Ground junction to the Circuit. Currently very unoptimized :("""
+        """add Ground junction to the Circuit."""
         self.add_component(Null_Component, self.edges[-1])
         self.add_junctions()
+        
+        #self.print_circuit_data(ignore=[], w=True)
 
     def validate(self):
         """
@@ -168,6 +175,8 @@ class Circuit:
 
     def run(self):
         """This is where all the nodal analysis takes place"""
+        
+        # self.update_comp_cxns()
 
         # self.print_circuit_data([], True)
 
@@ -284,7 +293,7 @@ class Circuit:
         elif self.vertices[comp_name].cxns[1] == node_name:
            return -1
         else: # just in case
-           raise ValueError("Components not connected")
+           raise ValueError("Components not connected", node_name, comp_name)
 
     def print_circuit_data(self, ignore=[Junction, Null_Component], w=False):
         """
@@ -307,6 +316,9 @@ class Circuit:
         if w:
             for wire in self.edges:
                 print("[{0}, {1}]".format(wire.start, wire.end))
+                
+            for i in range(self.lenv):
+                print(i, self.vertices[i].cxns)
 
     def graph_circuit_data(self, comps=[Capacitor], vir=0):
         """

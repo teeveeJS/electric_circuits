@@ -40,8 +40,12 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
             -1 if no loop found
     """
 
-    # print(visited_nodes, available_edges, [[target, current_node]])
-    print(visited_nodes, current_node)
+    visited_nodes.append(current_node)
+
+
+    print(visited_nodes, current_node, available_edges, [[target, current_node]])
+    #print(visited_nodes, current_node)
+    
 
     global total_res
     if subsetof([[target, current_node]], available_edges):
@@ -78,14 +82,21 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
                     break
 
     if next_node != None:
-        visited_nodes.append(current_node)
+        #visited_nodes.append(current_node)
         total_res += Graph.vertices[current_node].res
         available_edges.pop(available_edges.index(current_edge))
+        
+        #print('moving to', next_node, visited_nodes)
+        
         return backtracker(Graph, target, next_node, visited_nodes, available_edges)
 
     # No viable next node found; have to backtrack
-    next_node = visited_nodes[-1]
+    next_node = visited_nodes[-2]
     print("backtracking to", next_node)
+    # Remove the last two elements from visited_nodes so the backtracker doesn't
+    # get stuck
+    visited_nodes.pop()
+    visited_nodes.pop()
     # Subtract the cost of the next node so that it is not double added
     total_res -= Graph.vertices[next_node].res
     # TODO: could return an array instead and compute cost from that

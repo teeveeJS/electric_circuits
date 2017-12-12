@@ -76,6 +76,8 @@ class Junction(Component):
         super().__init__(0, 0, 0, int(num_cxns))
         self.is_ground = False
 
+        
+
     def add_end(self):
         self.cxns = np.append(self.cxns, -1)
 

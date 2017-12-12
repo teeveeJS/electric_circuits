@@ -68,20 +68,20 @@ def create_samples(data_key):
 
         # Circuit failures
         # two disjoint circuit
-        "c5": np.array([
-            [
-                DC_Battery(12),
-                Resistor(5),
-                DC_Battery(12),
-                Resistor(5)
-            ],
-            [
-                Wire(0, 1),
-                Wire(1, 0),
-                Wire(2, 3),
-                Wire(3, 2)
-            ]
-        ]),
+#        "c5": np.array([
+#            [
+#                DC_Battery(12),
+#                Resistor(5),
+#                DC_Battery(12),
+#                Resistor(5)
+#            ],
+#            [
+#                Wire(0, 1),
+#                Wire(1, 0),
+#                Wire(2, 3),
+#                Wire(3, 2)
+#            ]
+#        ]),
         # invalid loop within a circuit
         # surprisingly, the computations come out correct
         "c6": np.array([
@@ -223,7 +223,13 @@ def create_samples(data_key):
         ])
     }
     
-    if data_key in data.keys():
+    if data_key == "all":
+        # special arg to return all files
+        files = []
+        for key in data.keys():
+            files.append(data[key])
+        return files
+    elif data_key in data.keys():
         np.save(data_key, data[data_key])
         #could actually just return the array
         return 0
