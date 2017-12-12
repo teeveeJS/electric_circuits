@@ -57,12 +57,12 @@ comp_data = {
         "msg": ["voltage."],
         "comp": DC_Battery
     },
-#    "JUNCTION": {
-#        "lower_bound": [3],
-#        "upper_bound": [5],
-#        "msg": ["the number of connections."],
-#        "comp": Junction
-#    },
+    "JUNCTION": {
+        "lower_bound": [3],
+        "upper_bound": [5],
+        "msg": ["the number of connections."],
+        "comp": Junction
+    },
     "RESISTOR": {
         "lower_bound": [1e-03],
         "upper_bound": [1000.],
@@ -90,7 +90,7 @@ for i in range(num_comps):
     comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
     while not comps[i] in comp_names:
         comps[i] = input(" | ".join(comp_data.keys()) + \
-                         " | JUNCTION | MULTI_METER\n>>").upper()
+                         " | MULTI_METER\n>>").upper()
 
     if comps[i] == "MULTI_METER":
         t = None
@@ -100,8 +100,8 @@ for i in range(num_comps):
             comps[i] = Multimeter(Meter_Type.AMMETER)
         else:
             comps[i] = Multimeter()
-    elif comps[i] == "JUNCTION":
-        comps[i] = Junction()
+#    elif comps[i] == "JUNCTION":
+#        comps[i] = Junction()
     else:
         elem = comp_data[comps[i]]
         args = []

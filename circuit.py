@@ -46,10 +46,7 @@ class Circuit:
 
             # self.print_circuit_data(ignore=[])
             
-            
-            self.update_comp_cxns()
-            
-            
+            #self.update_comp_cxns()
 
             for _ in range(self.num_steps):
                 self.run()
@@ -108,7 +105,7 @@ class Circuit:
         2-component circuits from being labelled invalid
         """
         start_len = len(self.edges)
-        for w in self.edges[start_len::-1]:
+        for w in self.edges[0:start_len]:
             if not self.connects_to(w, Junction):
                 self.add_component(Junction, w, [2])
 
@@ -119,7 +116,7 @@ class Circuit:
             self.add_ground()
 
         # update components' connections to match the new wires
-        self.update_comp_cxns()
+        # self.update_comp_cxns()
 
         # show the circuit with wires
         # self.print_circuit_data([], w=True)
@@ -132,7 +129,7 @@ class Circuit:
                isinstance(self.vertices[w.end], Junction):
                 self.add_component(Null_Component, w)
 
-        self.update_comp_cxns()
+        # self.update_comp_cxns()
 
     def add_ground(self):
         """add Ground junction to the Circuit."""
@@ -178,7 +175,7 @@ class Circuit:
         
         # self.update_comp_cxns()
 
-        # self.print_circuit_data([], True)
+        self.print_circuit_data([], True)
 
         # set up the matrices
         m_size = self.lenv - 1
@@ -309,7 +306,7 @@ class Circuit:
             c = self.vertices[i]
             if not type(c) in ignore:
                 print("{0} {1} I: {2:0.3f} V: {3:0.3f} R: {4:0.1f}".format(i, \
-                     type(c), c.curr, c.emf, c.res))
+                     type(c), c.curr, c.emf, c.res), c.cxns)
 
         print("============")
 
@@ -317,8 +314,8 @@ class Circuit:
             for wire in self.edges:
                 print("[{0}, {1}]".format(wire.start, wire.end))
                 
-            for i in range(self.lenv):
-                print(i, self.vertices[i].cxns)
+            #for i in range(self.lenv):
+            #    print(i, self.vertices[i].cxns)
 
     def graph_circuit_data(self, comps=[Capacitor], vir=0):
         """

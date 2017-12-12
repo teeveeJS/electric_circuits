@@ -18,8 +18,6 @@ class Component:
         self.curr = I_o
         self.res = R_o
         self.cxns = np.ones(num_cxns, dtype='int') * -1
-
-        self.len_conn = num_cxns
         
         # for graphing
         self.v_hist = np.array([])
@@ -28,10 +26,14 @@ class Component:
 
     def change_connection(self, old_c, new_c):
         """Replaces (the first occurrence of) old_c with new_c in self.cxns"""
-        for i in range(self.len_conn):
+        for i in range(len(self.cxns)):
             if self.cxns[i] == old_c:
                 self.cxns[i] = new_c
                 break
+        #for c in self.cxns:
+        #    if c == old_c:
+        #        c = new_c
+        #        break
 
     def add_connection(self, cxn):
         """Adds a connection. i.e. replaces an unused connection (-1) with cxn"""
@@ -44,6 +46,10 @@ class Component:
     def update_connections(self, name, wires):
         """Loops through all elements of wires and updates whatever connections
         had been changed in class Circuit"""
+        # start by emptying current self.cxns
+        c_len = len(self.cxns)
+        self.cxns = np.ones(c_len, dtype='int') * -1
+        
         for w in wires:
             if w.start == name:
                 self.add_connection(w.end)
@@ -73,13 +79,33 @@ class Wire:
 class Junction(Component):
     """For splitting wires."""
     def __init__(self, num_cxns=3):
-        super().__init__(0, 0, 0, int(num_cxns))
+        super().__init__(0, 0, 0)
         self.is_ground = False
-
         
+        self.max_cxns_len = int(num_cxns) #cuz for some reason num_cxns isn't always int??
+    
+    #def change_connection(self, old_c, new_c):
+        # problem: replaces all instances
+        # self.cxns[np.where(self.cxns == old_c)] = new_c
+        
+    #override
+    @property
+    def is_fully_connected(self):
+        return len(self.cxns) == self.max_cxns_len
+    
+    #override
+    def add_connection(self, new_c):
+        if not (-1 in self.cxns) and len(self.cxns) < self.max_cxns_len:
+            self.cxns = np.append(self.cxns, new_c)
+        else:
+            self.change_connection(-1, new_c)
 
-    def add_end(self):
-        self.cxns = np.append(self.cxns, -1)
+    #override
+    def rm_connection(self, c_rm):
+        if len(self.cxns) > 2:
+            self.cxns = np.delete(self.cxns, -1)
+        else:
+            self.change_connection(c_rm, -1)
 
 
 class Null_Component(Component):
