@@ -44,16 +44,13 @@ class Circuit:
             self.add_nulls()
             self.add_junctions()
 
-            # self.print_circuit_data(ignore=[])
-            
-            #self.update_comp_cxns()
+            self.print_circuit_data(ignore=[], w=True)
 
             for _ in range(self.num_steps):
                 self.run()
 
             self.print_circuit_data()
             self.graph_circuit_data()
-            # self.graph_circuit_data([DC_Battery], 1)
 
     @property
     def lenv(self):
@@ -115,12 +112,6 @@ class Circuit:
         else:
             self.add_ground()
 
-        # update components' connections to match the new wires
-        # self.update_comp_cxns()
-
-        # show the circuit with wires
-        # self.print_circuit_data([], w=True)
-
     def add_nulls(self):
         """Adds Null_Components to the Circuit so that no two Junctions are
         connected"""
@@ -129,14 +120,10 @@ class Circuit:
                isinstance(self.vertices[w.end], Junction):
                 self.add_component(Null_Component, w)
 
-        # self.update_comp_cxns()
-
     def add_ground(self):
         """add Ground junction to the Circuit."""
         self.add_component(Null_Component, self.edges[-1])
         self.add_junctions()
-        
-        #self.print_circuit_data(ignore=[], w=True)
 
     def validate(self):
         """
@@ -172,10 +159,6 @@ class Circuit:
 
     def run(self):
         """This is where all the nodal analysis takes place"""
-        
-        # self.update_comp_cxns()
-
-        self.print_circuit_data([], True)
 
         # set up the matrices
         m_size = self.lenv - 1
@@ -214,8 +197,6 @@ class Circuit:
 
         x = solve(A, b)
 
-        # x = spsolve(A, b) #scipy sparse matrix solver
-        # print(x)
 
         # equate values of x with the components
         for i in range(len(x)):
@@ -312,7 +293,8 @@ class Circuit:
 
         if w:
             for wire in self.edges:
-                print("[{0}, {1}]".format(wire.start, wire.end))
+                #print("[{0}, {1}]".format(wire.start, wire.end))
+                print(wire.pair)
                 
             #for i in range(self.lenv):
             #    print(i, self.vertices[i].cxns)

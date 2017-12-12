@@ -43,7 +43,7 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
     visited_nodes.append(current_node)
 
 
-    print(visited_nodes, current_node, available_edges, [[target, current_node]])
+    #print(visited_nodes, current_node, available_edges, [[target, current_node]])
     #print(visited_nodes, current_node)
     
 
@@ -92,7 +92,7 @@ def backtracker(Graph, target, current_node, visited_nodes, available_edges):
 
     # No viable next node found; have to backtrack
     next_node = visited_nodes[-2]
-    print("backtracking to", next_node)
+    # print("backtracking to", next_node)
     # Remove the last two elements from visited_nodes so the backtracker doesn't
     # get stuck
     visited_nodes.pop()

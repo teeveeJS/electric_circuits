@@ -94,8 +94,8 @@ for i in range(num_comps):
 
     if comps[i] == "MULTI_METER":
         t = None
-        while t != "VOLTMETER" or t != "AMMETER":
-            t = input("Please enter meter type: VOLTMETER | AMMETER.\n>>").upper()
+        while not (t in ["VOLTMETER", "AMMETER"]):
+            t = input("Please enter meter type: VOLTMETER | AMMETER.\n>>").strip().upper()
         if t == "AMMETER":
             comps[i] = Multimeter(Meter_Type.AMMETER)
         else:
@@ -122,15 +122,15 @@ def show_components():
     for i in range(len(comps)):
         print(i, type(comps[i]))
 
-
-def show_wires():
-    """Prints the current wires the user has created"""
     print("\n==========")
     print("WIRES")
     print("==========")
-
-    for i in range(len(wires)):
-        print("({0}, {1})".format(wires[i][0], wires[i][1]))
+    
+    if len(wires) == 0:
+        print('No wires')
+    else:
+        for j in range(len(wires)):
+            print("({0}, {1})".format(wires[j][0], wires[j][1]))
 
     print('\n')
 
@@ -174,8 +174,6 @@ while not is_complete():
     c1, c2 = -2, -2 # just some initial states
     while not is_conn_valid(c1, c2):
         show_components()
-        if len(wires) > 0:
-            show_wires()
 
         c1 = int(input("Enter start point.\n>>"))
         c2 = int(input("Enter end point.\n>>"))
