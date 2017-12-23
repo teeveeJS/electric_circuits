@@ -56,7 +56,7 @@ function addComponent(event) {
 
     newComp.style.position = "absolute";
 
-    newComp.src = type + ".png";
+    newComp.src = "/img/" + type + ".png";
     newComp.style.height = "50px";
     newComp.style.width = "50px";
 
