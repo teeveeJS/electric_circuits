@@ -1,0 +1,20 @@
+.big_frame {
+  position: absolute;
+  background-color: #a2a8b2;
+}
+
+.comp {
+  cursor: pointer;
+}
+
+#start {
+  visibility: hidden;
+}
+
+#popup {
+  visibility: hidden;
+  position: absolute;
+  background-color: #add8e6;
+  width: 120px;
+
+}

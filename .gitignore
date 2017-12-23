@@ -3,6 +3,7 @@
 *.pyc
 
 # ignore tests
+/wip
 test.py
 temp.py
 

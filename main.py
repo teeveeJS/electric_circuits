@@ -24,15 +24,15 @@ def valid_file_name(s):
 num_comps = 0
 while not (1 <= num_comps < 21):
     print("Enter 1 to load Circuit from file")
-    num_comps = int(input("How many components will the circuit contain?\n>>"))
+    num_comps = int(input("How many components will the circuit contain?\n>> "))
 
 
 # The user has chosen to load circuit data from an external file
 if num_comps == 1:
     file_name = ""
     while not valid_file_name(file_name):
-        file_name = input("Enter file name.\n>>").strip()
-    
+        file_name = input("Enter file name.\n>> ").strip()
+
     create_samples(file_name)
     circ = Circuit(*np.load(file_name + ".npy"))
 
@@ -86,15 +86,15 @@ comp_data = {
 # Gather all the data for the components
 for i in range(num_comps):
     comps.append(0)
-    comps[i] = input("({0}) What kind of component?\n>>".format(i)).upper()
+    comps[i] = input("({0}) What kind of component?\n>> ".format(i)).upper()
     while not comps[i] in comp_names:
         comps[i] = input(" | ".join(comp_data.keys()) + \
-                         " | MULTIMETER\n>>").upper()
+                         " | MULTIMETER\n>> ").upper()
 
     if comps[i] == "MULTIMETER":
         t = None
         while not (t in ["VOLTMETER", "AMMETER"]):
-            t = input("Please enter meter type: VOLTMETER | AMMETER.\n>>").strip().upper()
+            t = input("Please enter meter type: VOLTMETER | AMMETER.\n>> ").strip().upper()
         if t == "AMMETER":
             comps[i] = Multimeter(Meter_Type.AMMETER)
         else:
@@ -107,7 +107,7 @@ for i in range(num_comps):
         for j in range(len(elem["lower_bound"])):
             inp = -1
             while not (elem["lower_bound"][j] <= inp <= elem["upper_bound"][j]):
-                inp = float(input("Please enter {0}\n>>".format(elem["msg"][j])))
+                inp = float(input("Please enter {0}\n>> ".format(elem["msg"][j])))
             args.append(inp)
         comps[i] = elem["comp"](*args)
 
@@ -124,7 +124,7 @@ def show_components():
     print("\n==========")
     print("WIRES")
     print("==========")
-    
+
     if len(wires) == 0:
         print('No wires')
     else:
@@ -169,8 +169,8 @@ while not is_complete():
     while not is_conn_valid(c1, c2):
         show_components()
 
-        c1 = int(input("Enter start point.\n>>"))
-        c2 = int(input("Enter end point.\n>>"))
+        c1 = int(input("Enter start point.\n>> "))
+        c2 = int(input("Enter end point.\n>> "))
 
     comps[c1].add_connection(c2)
     comps[c2].add_connection(c1)
@@ -184,15 +184,15 @@ enter have significant influence over how the graphs will look. We
 recommend that the time increment be small and the number of steps be
 such that time increment * number of steps ~ 4 * R_equiv * C_equiv"""
         print(caution_msg)
-        dt = float(input("Please enter the time increment.\n>>").strip())
-        n = int(input("Please enter the number of steps.\n>>").strip())
-        break        
-        
+        dt = float(input("Please enter the time increment.\n>> ").strip())
+        n = int(input("Please enter the number of steps.\n>> ").strip())
+        break
 
-if input("Would you like to save the circuit?\n>>").strip() == "y":
+
+if input("Would you like to save the circuit?\n>> ").strip() == "y":
     c_name = ""
     while not valid_file_name(c_name):
-        c_name = input("Enter file name without extension\n>>").strip()
+        c_name = input("Enter file name without extension\n>> ").strip()
     np.save(c_name, np.array([comps, wires, dt, n]))
 
 # Creates the actual circuit and starts all the calculations
