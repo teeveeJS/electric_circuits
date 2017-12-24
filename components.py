@@ -6,7 +6,7 @@ class Component:
     """
     The base class that holds the basic characteristics of the electric
     components.
-    """    
+    """
     def __init__(self, V_o, I_o, R_o, num_cxns=2):
         """
         emf: voltage drop across the component
@@ -18,7 +18,7 @@ class Component:
         self.curr = I_o
         self.res = R_o
         self.cxns = np.ones(num_cxns, dtype='int') * -1
-        
+
         # for graphing
         self.v_hist = np.array([])
         self.i_hist = np.array([])
@@ -49,7 +49,7 @@ class Component:
         # start by emptying current self.cxns
         c_len = len(self.cxns)
         self.cxns = np.ones(c_len, dtype='int') * -1
-        
+
         for w in wires:
             if w.start == name:
                 self.add_connection(w.end)
@@ -81,18 +81,18 @@ class Junction(Component):
     def __init__(self, num_cxns=3):
         super().__init__(0, 0, 0)
         self.is_ground = False
-        
+
         self.max_cxns_len = int(num_cxns) #cuz for some reason num_cxns isn't always int??
-    
+
     #def change_connection(self, old_c, new_c):
         # problem: replaces all instances
         # self.cxns[np.where(self.cxns == old_c)] = new_c
-        
+
     #override
     @property
     def is_fully_connected(self):
         return len(self.cxns) == self.max_cxns_len
-    
+
     #override
     def add_connection(self, new_c):
         if not (-1 in self.cxns) and len(self.cxns) < self.max_cxns_len:
@@ -195,7 +195,7 @@ class Light_Bulb(Resistor):
             self.print_state()
         else:
             self.state = State.OFF
-            
+
     def print_state(self):
         print("The light bulb is on with {0:0.1f} Watts".format(self.wattage))
 
@@ -228,3 +228,20 @@ class Inductor(Component):
         # L given in microhenries
         super().__init__(0, 0, 0) #TODO: has either v_init or i_init (maybe r_init?)
         self.L = L * 1e-06
+
+
+parse = {
+    "Wire": Wire,
+    "Junction": Junction,
+    "Switch": Switch,
+    "Resistor": Resistor,
+    "Light_Bulb": Light_Bulb,
+    "DC_Battery": DC_Battery,
+    "Capacitor": Capacitor,
+    "Voltmeter": Multimeter,
+    "Ammeter": Multimeter
+}
+
+def parse_comp(comp_type, args=[], kwargs={}):
+    # NOTE: distinction between voltmeter and ammeter must be made before calling parse_comp
+    return parse[comp_type](*args, **kwargs)

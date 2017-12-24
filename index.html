@@ -32,10 +32,12 @@
       <div class="comp">Switch</div>
     </div>
 
+    <!-- this will become visible when the circuit is fully connected -->
     <button id="start", onclick="startSimulation">Start</button>
 
-    <div id="popup">
-    </div>
+    <div class="hidden" id="popup"></div>
+
+    <p class="hidden" id="info"></p>
 
 
 
@@ -59,16 +61,11 @@
 
       let cm = document.getElementById("comp_menu");
       cm.style['margin-left'] = String(ww*0.85) + "px";
-      // cm.style['height'] = String((wh-100)/2) + "px";
-      // cm.style['width'] = "100px";
 
       let popup = document.getElementById("popup");
       popup.style['margin-left'] = String(ww*0.80) + "px";
       popup.style['margin-top'] = String((wh-100)/2) + "px";
 
-      // for (let c of document.getElementsByClassName("comp")) {
-      //   c.addEventListener("click", addComponent);
-      // }
       $(".comp").click(function(event) {
         addComponent(event);
       });

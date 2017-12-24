@@ -11,10 +11,9 @@
   visibility: hidden;
 }
 
-#popup {
+.hidden {
   visibility: hidden;
   position: absolute;
   background-color: #add8e6;
   width: 120px;
-
 }

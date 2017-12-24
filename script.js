@@ -12,7 +12,7 @@ const counts = {
 const properties = {
   //voltage, current, resistance, wattage, capacitance, inductance, state, num_cxns
   //[defaulValue, lowerBound, upperBound] bounds are inclusive
-  //NOTE: bounds are checked by python (currently not used in JS at all)
+  //NOTE: bounds only used to inform the user (getInfo())
   "Resistor": {"resistance": [5.0, 1e-6, 1e4]},
   "DC_Battery": {"voltage": [9.0, 1e-03, 1e4]},
   "Light_Bulb": {
@@ -29,16 +29,18 @@ const properties = {
   "Switch": {"state": ["OFF", "ON", "OFF"]},
   "Wire": {}
 };
+const units = {
+  "resistance": "Ohms",
+  "voltage": "Volts",
+  "wattage": "Watts",
+  "capacitance": "micro-Farads"
+};
 
 let WIRECONNECTION = {"start": null, "end": null};
 
 // let CANVAS = document.getElementById("sandbox");
 // let CTX = CANVAS.getContext('2d');
 
-// $(".comp").click(function(event) {
-//   console.log(event.target + " was clicked");
-//   addComponent(event);
-// });
 
 function addComponent(event) {
   let type = event.target.innerHTML;
@@ -65,17 +67,15 @@ function addComponent(event) {
     //event listeners
     // newComp.addEventListener("click", selectComp);
     newComp.addEventListener("dblclick", editProperties);
-    // newComp.addEventListener("drag", whileDragging);
     newComp.addEventListener("dragend", moveComp);
 
     document.getElementById("sandbox").appendChild(newComp);
 
     let comp_data = {"type": type};
     for (let key of Object.keys(properties[type])) {
-      comp_data[key] = properties[type][key][0];
+      comp_data['params'][key] = properties[type][key][0];
     };
 
-    // sendJSON("newcomp?", JSON.stringify(comp_data)).close();
     $.get("newcomp?" + JSON.stringify(comp_data), function(data, status) {
       console.log(data + " " + status);
     });
@@ -91,7 +91,7 @@ function addWire() {
 
     document.getElementById("sandbox").style.cursor = "auto";
 
-    //draw the wire
+    //TODO: draw the wire
 
     let wire_data = JSON.stringify(WIRECONNECTION);
     WIRECONNECTION['start'] = null;
@@ -101,7 +101,6 @@ function addWire() {
       child.removeEventListener("click", addWire);
     }
 
-    // sendJSON("newwire?", wire_data).close();
     $.get("newwire?" + wire_data, function(data, status) {
       console.log(data + " " + status);
     });
@@ -126,16 +125,13 @@ function editProperties() {
   1.1. 'popup' will be opened in another .html file
   2. display connections
   3. allow the user to rotate the element
-
-
-
   */
 
   let popup = document.getElementById("popup");
 
-  console.log(String(event.clientX) + " " + String(event.clientY));
+  let comp = event.target.className;
 
-  let props = properties[event.target.className];
+  let props = properties[comp];
   if (popup.style.visibility === "visible" ||
       Object.keys(props).length === 0 && props.constructor === Object) {
         // the popup is already open OR
@@ -144,7 +140,7 @@ function editProperties() {
   }
 
   let popuphead = document.createElement("DIV");
-  popuphead.innerHTML = event.target.className;
+  popuphead.innerHTML = comp;
   popuphead.style['font-weight'] = "bold";
   popuphead.style['text-align'] = "center";
   popup.appendChild(popuphead);
@@ -154,7 +150,12 @@ function editProperties() {
     propText.innerHTML = key;
     propText.style['text-align'] = "center";
     propText.style.cursor = "help";
-    propText.addEventListener("click", function() { getInfo(key) });
+    propText.addEventListener("mouseover", function(event) {
+      getInfo(event, comp, key);
+    });
+    propText.addEventListener("mouseleave", function(event) {
+      document.getElementById("info").style.visibility = "hidden";
+    });
 
     let propInput = document.createElement("INPUT");
     propInput.className = "propInput";
@@ -182,15 +183,8 @@ function editProperties() {
 }
 
 
-function whileDragging() {
-  document.body.style.cursor = "none";
-}
-
-
 function moveComp() {
   let drag_comp = document.getElementById(event.target.id);
-
-  // document.body.style.cursor = "auto";
 
   let mT = event.clientY - document.getElementById("sandbox").offsetTop;
   let mL = event.clientX - document.getElementById("sandbox").offsetLeft;
@@ -199,8 +193,24 @@ function moveComp() {
 }
 
 
-function getInfo(prop) {
-  //create a little window with info about bounds and units
+function getInfo(event, comp, prop) {
+  let msg = "";
+  let lowerBound = String(properties[comp][prop][1]);
+  let upperBound = String(properties[comp][prop][2]);
+  if (comp === "Junction" || comp === "Switch") {
+    msg = "The value you enter should be either " + lowerBound + " or " + upperBound;
+  } else {
+    msg = "Please enter a value in the inclusive range (" + lowerBound + ", " + upperBound + ") ";
+    msg += "<br/>Units: " + String(units[prop]);
+  };
+
+  let infoP = document.getElementById("info");
+  infoP.innerHTML = msg;
+  infoP.style.marginLeft = $("#popup").css("margin-left");
+  let mT = parseFloat($("#popup").css("margin-top")) + parseFloat($("#popup").css("height"));
+  infoP.style.marginTop = String(mT + 20) + "px";
+
+  infoP.style.visibility = "visible";
 }
 
 
@@ -208,19 +218,18 @@ function submitProperties() {
   let prop_data = {};
 
   for (let inp of document.getElementsByClassName("propInput")) {
-    prop_data["name"] = inp.id.split("|")[0];
+    prop_data["type"] = inp.id.split("|")[0];
 
     let property = inp.id.split("|")[1];
-    prop_data[property] = inp.value;
+    prop_data["params"][property] = inp.value;
   }
 
   let popup = document.getElementById("popup");
-  for (let child of popup.childNodes) {
-    popup.removeChild(child);
+  while (popup.firstChild) {
+    popup.removeChild(popup.firstChild);
   }
   popup.style.visibility = "hidden";
 
-  // sendJSON("update?", JSON.stringify(data)).close();
   $.get("update?" + JSON.stringify(prop_data), function(data, status) {
     console.log(data + " " + status);
   });
@@ -249,9 +258,12 @@ function linedraw(ax, ay, bx, by) {
 }
 
 
-// function sendJSON(loc, JSONstr) {
-//   let url = window.location.href + loc + JSONstr;
-//   console.log(url);
-//   let newWin = window.open(url, "_blank");
-//   return newWin;
-// }
+function startSimulation() {
+  //TODO
+  $.get("start", function(data, status) {
+    if (data['status'] === "valid") {
+      //the circuit is valid; the server sends simulated data
+      continue;
+    }
+  });
+}

@@ -1,7 +1,13 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-from validate import validate_bounds
 
+from validate import validate_bounds
+from circuit import Circuit
+from components import *
+
+
+components = []
+wires = []
 
 # HTTPRequestHandler class
 class Server_Request_Handler(BaseHTTPRequestHandler):
@@ -37,24 +43,28 @@ class Server_Request_Handler(BaseHTTPRequestHandler):
 
         elif "/newcomp?" in self.path:
             """a new component is created"""
-            json_data = json.loads(self.path.replace("%22", "\"").split("?")[1])
+            j = json.loads(self.path.replace("%22", "\"").split("?")[1])
 
             # print(json_data)
             #handle circuit updating & validating
+            if j['type'] == 'Ammeter':
+                components.append(parse_comp(j['type'], args=[Meter_Type.AMMETER]))
+            else:
+                components.append(parse_comp(j['type'], kwargs=j['params']))
 
 
         elif "/newwire?" in self.path:
             """create a new wire"""
             wire_data = json.loads(self.path.replace("%22", "\"").split("?")[1])
 
+            #check if the circuit is fully connected
 
-
-            # self.send_home()
         elif "/update?" in self.path:
             """a component's properties are updated"""
             update_data = json.loads(self.path.replace("%22", "\"").split("?")[1])
 
-            print(update_data)
+
+            # validate_bounds(update_data)
 
 
         elif "/comp?" in self.path:

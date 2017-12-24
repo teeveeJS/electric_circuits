@@ -18,7 +18,7 @@ def validate_bounds(data):
     if comp == "Junction" or comp == "Switch":
         key = comp.keys()[0]
         validation[key] = data[key] in comp[key]
-        return validation        
+        return validation
 
     for key in comp.keys():
         if comp[key][0] <= float(data[key]) <= comp[key][1]:
@@ -30,3 +30,11 @@ def validate_bounds(data):
             validation[key] = False
 
     return validation
+
+
+def validate_wire(data):
+
+
+
+
+    return
