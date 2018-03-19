@@ -177,7 +177,7 @@ def create_samples(data_key):
                 Wire(4, 0)
             ]
         ]),
-    
+
         # Ammeter
         "c12": np.array([
             [
@@ -191,7 +191,7 @@ def create_samples(data_key):
                 Wire(2, 0)
             ]
         ]),
-    
+
         # wheatstone bridge
         "c13": np.array([
             [
@@ -220,9 +220,87 @@ def create_samples(data_key):
                 Wire(5, 9),
                 Wire(9, 0)
             ]
+        ]),
+
+        "c14": np.array([
+            [
+                DC_Battery(1),
+                Junction(4),
+                Junction(),
+                Junction(),
+                Junction(),
+                Junction(),
+                Junction(),
+                Junction(),
+                Junction(4),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Resistor(1),
+                Multimeter(Meter_Type.AMMETER)
+            ],
+            [
+                Wire(0, 1),
+                Wire(0, 21),
+                Wire(21, 8),
+                Wire(1, 9),
+                Wire(1, 12),
+                Wire(1, 13),
+                Wire(2, 9),
+                Wire(2, 10),
+                Wire(2, 14),
+                Wire(3, 10),
+                Wire(3, 11),
+                Wire(3, 15),
+                Wire(4, 11),
+                Wire(4, 12),
+                Wire(4, 16),
+                Wire(5, 16),
+                Wire(5, 17),
+                Wire(5, 20),
+                Wire(6, 13),
+                Wire(6, 17),
+                Wire(6, 18),
+                Wire(7, 14),
+                Wire(7, 18),
+                Wire(7, 19),
+                Wire(8, 15),
+                Wire(8, 19),
+                Wire(8, 20)
+            ]
+        ]),
+
+        "c15": np.array([
+            [
+                DC_Battery(7.8),
+                Resistor(1001),
+                Junction(),
+                Resistor(99.9),
+                DC_Battery(2.548),
+                Junction(),
+                Resistor(2012)
+            ],
+            [
+                Wire(0, 1),
+                Wire(5, 0),
+                Wire(4, 3),
+                Wire(5, 4),
+                Wire(1, 2),
+                Wire(2, 3),
+                Wire(2, 6),
+                Wire(6, 5)
+            ]
         ])
     }
-    
+
     if data_key == "all":
         # special arg to return all files
         files = []

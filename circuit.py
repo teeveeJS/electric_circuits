@@ -286,7 +286,7 @@ class Circuit:
         for i in range(self.lenv):
             c = self.vertices[i]
             if not type(c) in ignore:
-                print("{0} {1} I: {2:0.3f} V: {3:0.3f} R: {4:0.1f}".format(i, \
+                print("{0} {1} I: {2:0.6f} V: {3:0.3f} R: {4:0.1f}".format(i, \
                      type(c), c.curr, c.emf, c.res))
 
         print("============")

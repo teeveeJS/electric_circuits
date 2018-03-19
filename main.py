@@ -64,7 +64,7 @@ comp_data = {
     },
     "RESISTOR": {
         "lower_bound": [1e-03],
-        "upper_bound": [1000.],
+        "upper_bound": [10000.],
         "msg": ["resistance."],
         "comp": Resistor
     },
